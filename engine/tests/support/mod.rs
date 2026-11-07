@@ -19,6 +19,8 @@ pub fn actor(id: u128, p: V3) -> Actor {
     }
 }
 pub struct TestWorld {
+    pub intel: std::collections::HashMap<u128, Vec<u128>>,
+    pub unloaded_z: Option<i32>,
     pub actors: Vec<Actor>,
     pub blocks: std::collections::HashMap<[i32; 3], String>,
     pub ledger: Vec<barrier::OwnedBlock>,
@@ -35,6 +37,8 @@ pub struct TestWorld {
 impl Default for TestWorld {
     fn default() -> Self {
         Self {
+            intel: Default::default(),
+            unloaded_z: None,
             blocks: Default::default(),
             ledger: vec![],
             decay: vec![],
@@ -50,6 +54,15 @@ impl Default for TestWorld {
     }
 }
 impl World for TestWorld {
+    fn intel_viewers(&self, owner: u128) -> Vec<u128> {
+        self.intel.get(&owner).cloned().unwrap_or(vec![owner])
+    }
+    fn network_id(&self, e: Entity) -> Option<u32> {
+        match e {
+            Entity::Player(id) => u32::try_from(id).ok(),
+            Entity::Mob(id) => Some(id),
+        }
+    }
     fn can_harm(&self, _owner: u128, target: Entity) -> bool {
         !self.protected.contains(&target)
     }
@@ -80,6 +93,9 @@ impl World for TestWorld {
         self.actors.clone()
     }
     fn boxes(&self, cell: [i32; 3]) -> Option<Vec<Box3>> {
+        if self.unloaded_z.is_some_and(|z| cell[2] >= z) {
+            return None;
+        }
         let mut out = Vec::new();
         if cell[1] == 0 {
             let p = cell.map(f64::from);

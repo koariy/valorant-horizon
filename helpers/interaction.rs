@@ -25,7 +25,7 @@ fn valorant_fire(
     let waiting = state()
         .lock()
         .ok()
-        .is_some_and(|s| s.selected == 8 && s.pending_equipped.is_some());
+        .is_some_and(|s| (s.selected == 8 || s.selected == 11) && s.pending_equipped.is_some());
     if waiting {
         *canceled = true;
         *swing_hand = false;
@@ -34,7 +34,7 @@ fn valorant_fire(
     let snapshot = state().lock().ok().and_then(|s| s.snapshot.clone());
     if snapshot
         .as_ref()
-        .is_some_and(|s| s.agent == 8 && s.camera.is_some())
+        .is_some_and(|s| (s.agent == 8 && s.camera.is_some()) || (s.agent == 11 && s.equipped))
     {
         *canceled = true;
         *swing_hand = false;
@@ -42,9 +42,9 @@ fn valorant_fire(
             let fresh = state().lock().ok().is_some_and(|mut s| {
                 s.key_transition(
                     if button == 0 {
-                        "astra.attack"
+                        "ability.attack"
                     } else {
-                        "astra.use"
+                        "ability.use"
                     },
                     true,
                 )

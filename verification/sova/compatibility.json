@@ -1,0 +1,7 @@
+{
+  "horizon": "41f822b659789780f58d32c63ddfb6887ea1b8bf",
+  "mixins": "5a64af938ec86b00d53d16a408aabc0038fb3e57",
+  "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "native_features": "--no-default-features",
+  "deepseek_key_configured": false
+}

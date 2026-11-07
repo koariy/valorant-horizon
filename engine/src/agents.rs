@@ -8,6 +8,7 @@ pub mod phoenix;
 pub mod raze;
 pub mod reyna;
 pub mod sage;
+pub mod sova;
 pub mod viper;
 use crate::abilities::Ability;
 
@@ -48,6 +49,7 @@ impl Default for Registry {
             ("astra", "Astra"),
             ("harbor", "Harbor"),
             ("clove", "Clove"),
+            ("sova", "Sova"),
         ] {
             registry
                 .register(Agent {
@@ -71,6 +73,8 @@ impl Default for Registry {
                         viper::DEFINITIONS.map(Some)
                     } else if id == "astra" {
                         astra::DEFINITIONS.map(Some)
+                    } else if id == "sova" {
+                        sova::DEFINITIONS.map(Some)
                     } else if id == "clove" {
                         clove::DEFINITIONS.map(Some)
                     } else if id == "harbor" {

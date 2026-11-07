@@ -140,3 +140,12 @@
 Изменены: `engine/src/agents.rs`, `engine/src/lib.rs`, `engine/src/server.rs`, `engine/src/gameplay/mod.rs`, `engine/src/gameplay/projectiles.rs`, `engine/src/gameplay/toxin.rs`, `bridge/server.rs`, `bridge/client.rs`, `bridge/deaths.rs`, `helpers/key.rs`, `helpers/damage_post.rs`, `helpers/stop.rs`, `horizon-mixin.toml`, `engine/Cargo.toml`, `spatial/Cargo.toml`, `README.md`, `docs/GROUP2.md`, `FILES.md`.
 
 Артефакты: `dist/valorant_horizon-0.3.0-dev.3.hnmod`, `dist/valorant-horizon-0.3.0-dev.3-source.zip`. Предыдущие пакеты сохранены. Not Dead Yet не реализована и в комплект работающих способностей не включается.
+
+
+## Этап Sova — 0.3.0-dev.4
+
+Новые: `engine/src/agents/sova.rs`, `engine/src/gameplay/recon.rs`, `engine/tests/sova.rs`, `helpers/recon_outline.rs`, `docs/SOVA.md`, `verification/sova/`.
+
+Изменены: `engine/src/agents.rs`, `engine/src/lib.rs`, `engine/src/server.rs`, `engine/src/gameplay/geometry.rs`, `engine/src/gameplay/mod.rs`, `engine/src/gameplay/objects.rs`, `engine/src/gameplay/projectiles.rs`, `engine/src/gameplay/shields.rs`, `engine/tests/protocol.rs`, `engine/tests/support/mod.rs`, `bridge/client.rs`, `bridge/server.rs`, `helpers/interaction.rs`, `helpers/key.rs`, `horizon-mixin.toml`, `engine/Cargo.toml`, `spatial/Cargo.toml`, `README.md`, `docs/GROUP2.md`, `FILES.md`.
+
+Артефакты: `dist/valorant_horizon-0.3.0-dev.4.hnmod`, `dist/valorant-horizon-0.3.0-dev.4-source.zip`; dist исключён из Git существующим .gitignore. Ветка разработки: feat/sova. Старые пакеты и результаты сохранены.

@@ -12,6 +12,7 @@ pub mod explosions;
 pub mod geometry;
 pub mod objects;
 pub mod projectiles;
+pub mod recon;
 pub mod remote_view;
 pub mod shields;
 pub mod smoke;
@@ -56,6 +57,20 @@ pub struct Hit {
 /// Missing chunks must return None. Mutations return success, never silently pretend.
 pub trait World {
     fn actors(&self) -> Vec<Actor>;
+    fn recon_target(&self, owner: u128, target: Entity) -> bool {
+        target != Entity::Player(owner)
+            && self.can_harm(owner, target)
+            && match target {
+                Entity::Player(id) => !self.intel_viewers(owner).contains(&id),
+                _ => true,
+            }
+    }
+    fn network_id(&self, _target: Entity) -> Option<u32> {
+        None
+    }
+    fn intel_viewers(&self, owner: u128) -> Vec<u128> {
+        vec![owner]
+    }
     fn hit_credits(&mut self) -> Vec<(u128, Entity)> {
         vec![]
     }
@@ -106,6 +121,7 @@ pub trait World {
         &mut self,
         _walls: &[crate::gameplay::divide::Divide],
         _shields: &mut Vec<shields::Shield>,
+        _objects: &mut Vec<objects::Object>,
     ) {
     }
     fn temporary_health(&mut self, _target: Entity, _value: f32) -> bool {
@@ -147,6 +163,11 @@ pub enum Action {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Snapshot {
     pub agent: usize,
+    pub contacts: Vec<recon::Contact>,
+    pub beams: Vec<recon::Beam>,
+    pub bow_charge: Option<u32>,
+    pub bounces: u8,
+    pub fury_shots: u8,
     pub after_death: bool,
     pub clove_marks: u8,
     pub sequence: u64,

@@ -9,7 +9,7 @@
 | https://playvalorant.com/en-us/agents/astra/ | Gravity Well, Nova Pulse, Nebula/Dissipate, Astral Form/Cosmic Divide | Серверный этап реализован, см. ASTRA.md; игровая приёмка не выполнена |
 | https://playvalorant.com/en-us/agents/harbor/ | High Tide, Storm Surge, Cove, Reckoning | Серверная реализация и 13 тестов; см. HARBOR.md; игровая приёмка не выполнена |
 | https://playvalorant.com/en-us/agents/clove/ | Pick-Me-Up, Meddle, Ruse, Not Dead Yet | Три способности реализованы, Not Dead Yet отключена; см. CLOVE.md |
-| https://playvalorant.com/en-us/agents/sova/ | Owl Drone, Shock Bolt, Recon Bolt, Hunter’s Fury | Аудит; код не реализован |
+| https://playvalorant.com/en-us/agents/sova/ | Owl Drone, Shock Bolt, Recon Bolt, Hunter’s Fury | Серверный этап реализован; см. SOVA.md; игровая приёмка не выполнена |
 | https://playvalorant.com/en-us/agents/cypher/ | Trapwire, Cyber Cage, Spycam, Neural Theft | Аудит; код не реализован |
 | https://playvalorant.com/en-us/agents/fade/ | Prowler, Seize, Haunt, Nightfall | Аудит; код не реализован |
 
@@ -52,3 +52,6 @@ Settings в agents/brimstone.rs задают дальность и сроки; D
 
 
 Этап 0.3.0-dev.3: Clove добавлена под V/минус (-). Доступны Pick-Me-Up, Meddle и Ruse, включая дым на экране смерти; Not Dead Yet явно отключена. Это частичная реализация агента, не полный комплект. Подробный аудит API, адаптации и сценарии — CLOVE.md. Следующий агент группы — Sova; его код пока не добавлен.
+
+
+Этап 0.3.0-dev.4: Sova зарегистрирован под V/=. Четыре способности используют общий модуль приватной разведки, удалённую камеру и расширенный перехват попаданий по логическим объектам. Подробности и границы проверки — SOVA.md, verification/sova/RESULTS.md. Cypher и Fade пока не реализованы; следующий агент — Cypher. Предыдущие записи выше относятся к соответствующим этапам.

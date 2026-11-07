@@ -1,6 +1,6 @@
 [mod]
 id = "valorant_horizon"
-version = "0.3.0-dev.3"
+version = "0.3.0-dev.4"
 
 [compatibility]
 horizon_revision = "41f822b659789780f58d32c63ddfb6887ea1b8bf"
@@ -314,4 +314,14 @@ helper="helpers/clove_death_consume.rs"
 bindings=[
  {name="game",ty="&crate::game::Game<'_>",value="&*self"},
  {name="key",ty="winit::keyboard::KeyCode",value="key"},
+]
+
+[[injection]]
+id="recon_outline"
+target="horizon_client::game::native_hooks::Game<'_>::native_entity_outline"
+kind="HEAD"
+helper="helpers/recon_outline.rs"
+bindings=[
+ {name="entity_id",ty="u32",value="entity_id"},
+ {name="outline",ty="&mut Option<u32>",value="outline"},
 ]

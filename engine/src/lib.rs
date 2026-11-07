@@ -139,6 +139,8 @@ impl State {
                     agents::raze::NAMES[i]
                 } else if self.selected == 5 {
                     agents::reyna::NAMES[i]
+                } else if self.selected == 11 {
+                    agents::sova::NAMES[i]
                 } else if self.selected == 10 {
                     agents::clove::NAMES[i]
                 } else if self.selected == 9 {
@@ -162,6 +164,15 @@ impl State {
             lines.push(info.clone());
         }
         if let Some(snapshot) = &self.snapshot {
+            if self.selected == 11 {
+                lines.push(format!(
+                    "Bow: {:?}/30 | bounces: {} | Fury: {} | revealed: {}",
+                    snapshot.bow_charge,
+                    snapshot.bounces,
+                    snapshot.fury_shots,
+                    snapshot.contacts.len()
+                ));
+            }
             if self.selected == 10 && snapshot.after_death {
                 lines.push(
                     "Ruse after death: E equip | arrows aim | Z mark | R confirm | B cancel".into(),
@@ -191,7 +202,9 @@ impl State {
             for (index, agent) in self.registry.agents().iter().enumerate() {
                 lines.push(format!(
                     "[{}] {}",
-                    if index == 10 {
+                    if index == 11 {
+                        "=".into()
+                    } else if index == 10 {
                         "-".into()
                     } else if index == 9 {
                         "0".into()

@@ -1,0 +1,35 @@
+{
+  "url": "https://playvalorant.com/en-us/agents/sova/",
+  "retrieved": "2026-11-07",
+  "html_sha256": "791dfbf0f5161fa0d7b617697611784a1f75cb853025bc9e3b3f9d5d98738f91",
+  "abilities": [
+    {
+      "title": "SHOCK BOLT",
+      "description": {
+        "type": "html",
+        "body": "EQUIP a bow with a shock bolt. FIRE to send the explosive bolt forward, detonating upon collision and damaging players nearby. HOLD FIRE to extend the range of the projectile. ALT FIRE to add up to two bounces to this arrow."
+      }
+    },
+    {
+      "title": "RECON BOLT",
+      "description": {
+        "type": "html",
+        "body": "EQUIP a bow with recon bolt. FIRE to send the recon bolt forward, activating upon collision and Revealing the location of nearby enemies caught in the line of sight of the bolt. Enemies can destroy this bolt. HOLD FIRE to extend the range of the projectile. ALT FIRE to add up to two bounces to this arrow."
+      }
+    },
+    {
+      "title": "OWL DRONE",
+      "description": {
+        "type": "html",
+        "body": "EQUIP an owl drone. FIRE to deploy and take control of movement of the drone. While in control of the drone, FIRE to shoot a marking dart. This dart will Reveal the location of any player struck by the dart. Enemies can destroy the Owl Drone."
+      }
+    },
+    {
+      "title": "HUNTER'S FURY",
+      "description": {
+        "type": "html",
+        "body": "EQUIP a bow with three long-range wall-piercing energy blasts. FIRE to release an energy blast in a line in front of Sova, dealing damage and revealing the location of enemies caught in the line. This ability can be RE-USED up to two more times while the ability timer is active."
+      }
+    }
+  ]
+}

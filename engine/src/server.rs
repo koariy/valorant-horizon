@@ -10,6 +10,7 @@ pub const CHANNEL: &str = "valorant_horizon:abilities";
 #[derive(Default)]
 pub struct Player {
     pub agent: usize,
+    pub sova: crate::agents::sova::Sova,
     pub clove: crate::agents::clove::Clove,
     pub harbor: crate::agents::harbor::Harbor,
     pub astra: crate::agents::astra::Astra,
@@ -40,7 +41,8 @@ impl Player {
     }
 
     pub fn busy(&self) -> bool {
-        self.clove.busy()
+        self.sova.busy()
+            || self.clove.busy()
             || self.harbor.busy()
             || self.astra.busy()
             || self.viper.busy()
@@ -53,6 +55,7 @@ impl Player {
             || self.reyna.busy()
     }
     pub fn cancel(&mut self) {
+        self.sova.cancel();
         self.clove.leave();
         self.harbor.cancel();
         self.astra.cancel();
@@ -69,6 +72,8 @@ impl Player {
 #[derive(Default)]
 pub struct Session {
     pub players: HashMap<u128, Player>,
+    pub intel: recon::Intel,
+    pub beams: Vec<recon::Beam>,
     pub toxins: Vec<toxin::Field>,
     pub shields: Vec<shields::Shield>,
     pub divides: Vec<crate::gameplay::divide::Divide>,
@@ -104,6 +109,11 @@ impl Session {
         }
     }
     pub fn tick(&mut self, w: &mut impl World) {
+        self.intel.tick(w);
+        for b in &mut self.beams {
+            b.ticks = b.ticks.saturating_sub(1);
+        }
+        self.beams.retain(|b| b.ticks > 0);
         self.decay_loaded = false;
         if let Ok(entries) = w.saved_decay() {
             self.decay = entries.into_iter().collect();
@@ -172,6 +182,7 @@ impl Session {
                     jump: false,
                     eligible: false,
                 };
+                p.sova.offline();
                 p.clove.offline();
                 p.viper.tick(&offline, 0);
                 p.astra.tick(&offline, w);
@@ -269,13 +280,14 @@ impl Session {
                 continue;
             }
             let okay = match r.action {
-                Action::Select(index) if index <= 10 => {
+                Action::Select(index) if index <= 11 => {
                     if p.agent == index {
                         true
                     } else if p.busy() {
                         false
                     } else {
                         p.agent = index;
+                        p.sova = Default::default();
                         p.clove = Default::default();
                         p.harbor = Default::default();
                         p.astra = Default::default();
@@ -292,7 +304,9 @@ impl Session {
                 }
                 Action::Select(_) => false,
                 Action::Activate(slot) => {
-                    if p.agent == 10 {
+                    if p.agent == 11 {
+                        p.sova.activate(slot, a)
+                    } else if p.agent == 10 {
                         p.clove.activate(slot, a, w)
                     } else if p.agent == 9 {
                         p.harbor.activate(
@@ -347,6 +361,18 @@ impl Session {
                     p.jett.guiding = false;
                     true
                 }
+                Action::Release(4) if p.agent == 11 => p.sova.release(
+                    a,
+                    &mut crate::agents::sova::Context {
+                        world: w,
+                        projectiles: &mut self.projectiles,
+                        objects: &mut self.objects,
+                        next: &mut self.next_object,
+                        intel: &mut self.intel,
+                        beams: &mut self.beams,
+                        bursts: &mut self.bursts,
+                    },
+                ),
                 Action::Release(4) => {
                     p.phoenix.guiding = false;
                     p.harbor.guiding = false;
@@ -365,6 +391,9 @@ impl Session {
                         || (p.agent == 7 && p.viper.equipped.is_none())
                         || (p.agent == 8 && p.astra.view.is_none())
                         || (p.agent == 10 && p.clove.equipped.is_none())
+                        || (p.agent == 11
+                            && p.sova.equipped.is_none()
+                            && p.sova.view.is_none())
                         || (p.agent == 9
                             && p.harbor.equipped.is_none()
                             && p.harbor.tide.is_none()) =>
@@ -377,7 +406,21 @@ impl Session {
                     }
                 }
                 Action::Fire(alt) => {
-                    if p.agent == 10 {
+                    if p.agent == 11 {
+                        p.sova.fire(
+                            alt,
+                            a,
+                            &mut crate::agents::sova::Context {
+                                world: w,
+                                projectiles: &mut self.projectiles,
+                                objects: &mut self.objects,
+                                next: &mut self.next_object,
+                                intel: &mut self.intel,
+                                beams: &mut self.beams,
+                                bursts: &mut self.bursts,
+                            },
+                        )
+                    } else if p.agent == 10 {
                         p.clove.fire(
                             alt,
                             a,
@@ -461,6 +504,7 @@ impl Session {
                 Action::Aim(x, z) => p.agent == 10 && p.clove.nudge(x, z, a),
                 Action::Recall => p.agent == 8 && p.astra.dissipate(a, &mut self.smokes),
                 Action::Cancel => {
+                    p.sova.cancel();
                     p.clove.cancel();
                     p.harbor.cancel();
                     p.astra.cancel();
@@ -508,12 +552,28 @@ impl Session {
         }
         self.shields.retain(|s| s.ticks > 0);
         self.toxins.clear();
+        let mut sova_kills = vec![];
         for a in &actors {
             if let Entity::Player(id) = a.entity
                 && let Some(p) = self.players.get_mut(&id)
             {
                 p.strike_delay = p.strike_delay.saturating_sub(1);
-                if p.agent == 10 {
+                if p.agent == 11 {
+                    for target in p.sova.tick(
+                        a,
+                        &mut crate::agents::sova::Context {
+                            world: w,
+                            projectiles: &mut self.projectiles,
+                            objects: &mut self.objects,
+                            next: &mut self.next_object,
+                            intel: &mut self.intel,
+                            beams: &mut self.beams,
+                            bursts: &mut self.bursts,
+                        },
+                    ) {
+                        sova_kills.push((id, target));
+                    }
+                } else if p.agent == 10 {
                     p.clove.tick(a, w);
                 } else if p.agent == 9 {
                     p.harbor.tick(a, w, &mut self.zones);
@@ -542,7 +602,24 @@ impl Session {
                 }
             }
         }
+        for (owner, target) in sova_kills {
+            self.defer_kill(w, owner, target, false);
+        }
         for o in &mut self.objects {
+            if o.health <= 0. || o.ticks == 0 {
+                continue;
+            }
+            if matches!(o.kind, objects::ObjectKind::ReconBolt) && [60, 40, 20].contains(&o.ticks) {
+                self.intel.scan(
+                    w,
+                    o.owner,
+                    add(o.position, [0., 0.12, 0.]),
+                    self.players
+                        .get(&o.owner)
+                        .map_or(24., |p| p.sova.settings.scan_range.clamp(1., 32.)),
+                );
+                w.ability_sound(o.position, "minecraft:block.amethyst_block.chime");
+            }
             if matches!(o.kind, objects::ObjectKind::Leer) {
                 let eye = add(o.position, [0., 0.35, 0.]);
                 for t in actors
@@ -624,6 +701,10 @@ impl Session {
         self.objects.retain(|o| {
             o.ticks > 0
                 && o.health > 0.0
+                && (!matches!(o.kind, objects::ObjectKind::Drone)
+                    || self.players.get(&o.owner).is_some_and(|p| {
+                        p.agent == 11 && p.sova.view.is_some() && p.sova.drone == Some(o.id)
+                    }))
                 && (!matches!(o.kind, objects::ObjectKind::Shade)
                     || self
                         .players
@@ -750,23 +831,56 @@ impl Session {
             self.defer_kill(w, owner, target, false);
         }
         self.zones.retain(|z| z.ticks > 0);
-        w.block_arrows(&self.divides, &mut self.shields);
+        w.block_arrows(&self.divides, &mut self.shields, &mut self.objects);
         let mut alive = Vec::new();
         for mut p in std::mem::take(&mut self.projectiles) {
             if matches!(p.kind, ProjectileKind::Knife { .. })
-                && shields::intercept_barriers(
+                && projectiles::intercept(
                     w,
                     &mut self.shields,
                     &self.divides,
-                    p.position,
-                    add(p.position, p.velocity),
-                    10.,
-                    shields::CollisionPadding {
-                        actors: 0.08,
-                        terrain: 0.08,
+                    &mut self.objects,
+                    projectiles::Shot {
+                        from: p.position,
+                        to: add(p.position, p.velocity),
+                        damage: 10.,
+                        padding: shields::CollisionPadding {
+                            actors: 0.08,
+                            terrain: 0.08,
+                        },
                     },
                 )
             {
+                continue;
+            }
+            if matches!(p.kind, ProjectileKind::SovaBolt { .. }) {
+                if crate::agents::sova::arrow(
+                    &mut p,
+                    &mut crate::agents::sova::Context {
+                        world: w,
+                        projectiles: &mut self.projectiles,
+                        objects: &mut self.objects,
+                        next: &mut self.next_object,
+                        intel: &mut self.intel,
+                        beams: &mut self.beams,
+                        bursts: &mut self.bursts,
+                    },
+                ) {
+                    alive.push(p);
+                }
+                continue;
+            }
+            if matches!(p.kind, ProjectileKind::ReconDart) {
+                let hit = p.advance(w);
+                match hit {
+                    Some(Impact::Entity(target, _, _)) => {
+                        if w.recon_target(p.owner, target) {
+                            self.intel.tag(p.owner, target);
+                        }
+                    }
+                    None if p.ticks > 0 => alive.push(p),
+                    _ => {}
+                }
                 continue;
             }
             if matches!(p.kind, ProjectileKind::Meddle) {
@@ -1273,7 +1387,9 @@ impl Session {
     }
     pub fn snapshot(&self, id: u128) -> Option<Snapshot> {
         let p = self.players.get(&id)?;
-        let slots = if p.agent == 10 {
+        let slots = if p.agent == 11 {
+            p.sova.slots
+        } else if p.agent == 10 {
             p.clove.slots
         } else if p.agent == 9 {
             p.harbor.slots
@@ -1298,10 +1414,17 @@ impl Session {
         };
         Some(Snapshot {
             agent: p.agent,
+            contacts: self.intel.snapshot(id),
+            beams: self.beams.clone(),
+            bow_charge: p.sova.charging,
+            bounces: p.sova.bounces,
+            fury_shots: p.sova.fury_shots,
             clove_marks: p.clove.marks.len() as u8,
             after_death: p.agent == 10 && p.clove.death.is_some(),
             sequence: p.sequence,
-            equipped: if p.agent == 10 {
+            equipped: if p.agent == 11 {
+                p.sova.equipped.is_some() || p.sova.view.is_some()
+            } else if p.agent == 10 {
                 p.clove.equipped.is_some()
             } else if p.agent == 9 {
                 p.harbor.equipped.is_some() || p.harbor.tide.is_some()
@@ -1328,7 +1451,12 @@ impl Session {
             cooldowns: slots.map(|s| s.remaining),
             active: slots.map(|s| s.active),
             knives: if p.agent == 0 { p.jett.knives } else { 0 },
-            camera: p.astra.view.as_ref().map(|v| v.position),
+            camera: p
+                .sova
+                .view
+                .as_ref()
+                .or(p.astra.view.as_ref())
+                .map(|v| v.position),
             stars: self
                 .players
                 .values()
