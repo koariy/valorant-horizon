@@ -1,0 +1,24 @@
+{
+  "horizon_commit": "41f822b659789780f58d32c63ddfb6887ea1b8bf",
+  "native_check": {
+    "ok": true,
+    "report": {
+      "api": "native-1/41f822b659789780f58d32c63ddfb6887ea1b8bf/5a64af938ec86b00d53d16a408aabc0038fb3e57",
+      "api_level": null,
+      "capabilities": [],
+      "game": "26.3",
+      "id": "valorant_horizon",
+      "kind": "native-mod",
+      "requires": [],
+      "sha256": "ec1f85decbaeeb7069a5e2bade4142b20238a75d11c652d1dc0cd8b37d3eaadb",
+      "side": null,
+      "signed": false,
+      "size": 90467,
+      "version": "0.3.0-dev.4"
+    }
+  },
+  "content_check_exit": 1,
+  "content_check": "{\"error\":\"it has native code (horizon-native.json): it is a native-mod\",\"ok\":false}\nerror: it has native code (horizon-native.json): it is a native-mod",
+  "launcher_support": "Pinned launcher installed_mods filters .hnmod only; not an ordinary installable content .hmod",
+  "source_layout": "Identical documented native ZIP layout, no WASM/content-only substitution"
+}
