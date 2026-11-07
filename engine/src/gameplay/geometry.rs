@@ -107,22 +107,56 @@ pub fn sweep(world: &impl World, b: Box3, delta: V3) -> V3 {
     }
     safe
 }
+#[derive(Clone, Copy, Debug)]
+pub struct Collision {
+    pub time: f64,
+    pub normal: V3,
+    pub known: bool,
+}
 pub fn block_hit(world: &impl World, from: V3, to: V3, r: f64) -> Option<f64> {
+    block_collision(world, from, to, r).map(|h| h.time)
+}
+pub fn block_collision(world: &impl World, from: V3, to: V3, r: f64) -> Option<Collision> {
     let min = std::array::from_fn::<_, 3, _>(|i| from[i].min(to[i]) - r);
     let max = std::array::from_fn::<_, 3, _>(|i| from[i].max(to[i]) + r);
+    let unknown = Collision {
+        time: 0.,
+        normal: [0.; 3],
+        known: false,
+    };
     if !min.iter().chain(&max).all(|v| v.is_finite()) || distance(from, to) > 128.0 {
-        return Some(0.0);
+        return Some(unknown);
     }
-    let mut first: Option<f64> = None;
+    let mut first: Option<Collision> = None;
     for x in min[0].floor() as i32..=max[0].floor() as i32 {
         for y in min[1].floor() as i32..=max[1].floor() as i32 {
             for z in min[2].floor() as i32..=max[2].floor() as i32 {
                 let Some(boxes) = world.boxes([x, y, z]) else {
-                    return Some(0.0);
+                    return Some(unknown);
                 };
                 for b in boxes {
-                    if let Some(t) = b.expanded(r).segment(from, to) {
-                        first = Some(first.map_or(t, |old| old.min(t)));
+                    let b = b.expanded(r);
+                    if let Some(t) = b.segment(from, to)
+                        && first.as_ref().is_none_or(|old| t < old.time)
+                    {
+                        let at = add(from, scale(sub(to, from), t));
+                        let (axis, sign) = (0..3)
+                            .flat_map(|i| [(i, -1.), (i, 1.)])
+                            .min_by(|(i, a), (j, bside)| {
+                                let a =
+                                    (at[*i] - if *a < 0. { b.min[*i] } else { b.max[*i] }).abs();
+                                let b = (at[*j] - if *bside < 0. { b.min[*j] } else { b.max[*j] })
+                                    .abs();
+                                a.total_cmp(&b)
+                            })
+                            .unwrap();
+                        let mut normal = [0.; 3];
+                        normal[axis] = sign;
+                        first = Some(Collision {
+                            time: t,
+                            normal,
+                            known: true,
+                        });
                     }
                 }
             }

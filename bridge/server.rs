@@ -44,6 +44,36 @@ static DECAY: AttachmentType<String> = AttachmentType {
     sync: false,
 };
 impl World for Bridge<'_, '_> {
+    fn network_id(&self, target: Entity) -> Option<u32> {
+        match target {
+            Entity::Mob(id) => Some(id),
+            Entity::Player(id) => self
+                .0
+                .native_server_players()
+                .into_iter()
+                .find(|p| p.uuid == id)
+                .map(|p| p.entity_id as u32),
+        }
+    }
+    fn intel_viewers(&self, owner: u128) -> Vec<u128> {
+        let all = self.0.native_server_players();
+        let Some(source) = all.iter().find(|p| p.uuid == owner) else {
+            return vec![];
+        };
+        let team = self.0.score.board.players_team(&source.name);
+        all.iter()
+            .filter(|p| {
+                p.dimension == self.0.dim.id()
+                    && (p.uuid == owner
+                        || team
+                            .zip(self.0.score.board.players_team(&p.name))
+                            .is_some_and(|(a, b)| a.name == b.name))
+            })
+            .map(|p| p.uuid)
+            .take(64)
+            .collect()
+    }
+
     fn hit_credits(&mut self) -> Vec<(u128, Entity)> {
         let Some(l) = self.0.native_level(self.0.dim.id()) else {
             return vec![];
@@ -344,7 +374,12 @@ impl World for Bridge<'_, '_> {
             }
         }
     }
-    fn block_arrows(&mut self, walls: &[divide::Divide], shields: &mut Vec<shields::Shield>) {
+    fn block_arrows(
+        &mut self,
+        walls: &[divide::Divide],
+        shields: &mut Vec<shields::Shield>,
+        objects: &mut Vec<objects::Object>,
+    ) {
         let ids: std::collections::HashSet<_> = self
             .0
             .creatures
@@ -365,16 +400,19 @@ impl World for Bridge<'_, '_> {
                     }
                     _ => 8.,
                 };
-                shields::intercept_barriers(
+                projectiles::intercept(
                     self,
                     shields,
                     walls,
-                    from,
-                    to,
-                    damage,
-                    shields::CollisionPadding {
-                        actors: 0.3,
-                        terrain: 0.,
+                    objects,
+                    projectiles::Shot {
+                        from,
+                        to,
+                        damage,
+                        padding: shields::CollisionPadding {
+                            actors: 0.3,
+                            terrain: 0.,
+                        },
                     },
                 )
                 .then_some(p.id)
@@ -723,8 +761,9 @@ impl Game<'_> {
             };
             s
         };
-        if !session.divides.is_empty() || !session.shields.is_empty() {
-            Bridge(self).block_arrows(&session.divides, &mut session.shields);
+        if !session.divides.is_empty() || !session.shields.is_empty() || !session.objects.is_empty()
+        {
+            Bridge(self).block_arrows(&session.divides, &mut session.shields, &mut session.objects);
         }
         if let Ok(mut all) = server::sessions().lock() {
             all.insert(key, session);

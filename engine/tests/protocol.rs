@@ -24,7 +24,7 @@ fn maximal_snapshot_fits_native_payload_budget() {
         Object {
             id: u64::MAX,
             owner: u128::MAX,
-            kind: ObjectKind::BoomBot,
+            kind: ObjectKind::ReconBolt,
             position: at,
             health: 6.,
             ticks: u32::MAX,
@@ -100,6 +100,25 @@ fn maximal_snapshot_fits_native_payload_budget() {
         };
         shields::MAX_SHIELDS
     ];
-    let bytes = serde_json::to_vec(&s.snapshot(u128::MAX).unwrap()).unwrap();
+    let mut snapshot = s.snapshot(u128::MAX).unwrap();
+    snapshot.contacts = vec![
+        recon::Contact {
+            entity: u32::MAX,
+            ticks: u32::MAX
+        };
+        recon::MAX_CONTACTS
+    ];
+    snapshot.beams = vec![
+        recon::Beam {
+            from: at,
+            to: at,
+            ticks: u32::MAX
+        };
+        recon::MAX_BEAMS
+    ];
+    snapshot.bow_charge = Some(u32::MAX);
+    snapshot.bounces = u8::MAX;
+    snapshot.fury_shots = u8::MAX;
+    let bytes = serde_json::to_vec(&snapshot).unwrap();
     assert!(bytes.len() < 30000, "{}", bytes.len());
 }

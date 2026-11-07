@@ -2,6 +2,8 @@ use super::{geometry::*, *};
 use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum ObjectKind {
+    Drone,
+    ReconBolt,
     Shade,
     Leer,
     Soul,
@@ -22,6 +24,8 @@ pub struct Object {
 impl Object {
     pub fn bounds(&self) -> Box3 {
         let (width, height) = match self.kind {
+            ObjectKind::Drone => (0.15, 0.3),
+            ObjectKind::ReconBolt => (0.12, 0.25),
             ObjectKind::Soul => (0.15, 0.3),
             ObjectKind::Leer => (0.35, 0.7),
             ObjectKind::Shade => (0.35, 1.8),

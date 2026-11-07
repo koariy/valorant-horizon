@@ -1,0 +1,259 @@
++ cargo fmt --manifest-path /tmp/valorant-horizon-vh5da7h5/engine/Cargo.toml --check
++ cargo clippy --manifest-path /tmp/valorant-horizon-vh5da7h5/engine/Cargo.toml --all-targets -- -D warnings
+    Updating crates.io index
+     Locking 11 packages to highest Rust 1.99.1 compatible versions
+      Adding serde_json v1.0.151 (available: v1.0.154)
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling syn v3.0.9
+   Compiling serde v1.0.229
+   Compiling serde_json v1.0.151
+    Checking itoa v1.0.18
+    Checking memchr v2.8.3
+   Compiling serde_derive v1.0.229
+    Checking valorant-horizon-engine v0.3.0-dev.4 (/tmp/valorant-horizon-vh5da7h5/engine)
+    Finished `dev` profile [unoptimized] target(s) in 11.66s
++ cargo test --manifest-path /tmp/valorant-horizon-vh5da7h5/engine/Cargo.toml
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling itoa v1.0.18
+   Compiling memchr v2.8.3
+   Compiling serde_json v1.0.151
+   Compiling serde v1.0.229
+   Compiling valorant-horizon-engine v0.3.0-dev.4 (/tmp/valorant-horizon-vh5da7h5/engine)
+    Finished `test` profile [unoptimized] target(s) in 14.05s
+     Running unittests src/lib.rs (/tmp/valorant-horizon-vh5da7h5/engine/target/debug/deps/valorant_horizon_engine-e93fc3517b5d384b)
+
+running 7 tests
+test gameplay::combat::tests::positive_hits_route_only_with_unique_world_ids ... ok
+test astral_input_tests::astral_mouse_buttons_latch_independently_until_release ... ok
+test tests::cooldown_prevents_agent_switch_and_cancel_does_not_reset_it ... ok
+test tests::duplicate_agents_are_rejected ... ok
+test tests::invalid_settings_and_menu_do_not_activate ... ok
+test tests::target_range_rejects_invalid_coordinates ... ok
+test input_tests::repeated_keydown_does_not_reactivate_until_release ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/astra.rs (/tmp/valorant-horizon-vh5da7h5/engine/target/debug/deps/astra-d15ccef9a8c119d6)
+
+running 15 tests
+test audio_gain_is_reduced_only_across_divide ... ok
+test dimension_transfer_clears_other_world_anchors_without_refunding ... ok
+test dimension_transfer_does_not_move_stars_or_refill_immediately ... ok
+test dissipate_returns_only_after_delay_and_has_short_smoke ... ok
+test cosmic_divide_spends_ultimate_only_after_two_valid_points ... ok
+test divide_plane_crossing_is_infinite_and_does_not_block_same_side ... ok
+test form_is_separate_from_ultimate_and_cancel_preserves_stars ... ok
+test divide_blocks_knives_but_not_utility_and_expires ... ok
+test nebula_uses_slot_charge_and_spent_star_returns_separately ... ok
+test gravity_pulls_then_applies_vulnerability_and_nova_waits ... ok
+test selection_and_snapshot_include_form ... ok
+test shots_starting_on_divide_are_blocked ... ok
+test vulnerability_changes_final_damage_and_respects_runback ... ok
+test vulnerability_expires_even_after_target_disappears ... ok
+test placements_use_one_shared_star_pool ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/brimstone.rs (/tmp/valorant-horizon-vh5da7h5/engine/target/debug/deps/brimstone-281f6c1733e12ee5)
+
+running 6 tests
+test capacity_failure_does_not_spend_charges ... ok
+test incendiary_lands_and_does_not_heal_owner ... ok
+test selection_snapshot_and_offline_cooldown_are_integrated ... ok
+test orbital_deals_real_damage_and_expires ... ok
+test smoke_marks_are_confirmed_atomically_and_cancelled_without_spending ... ok
+test stim_buff_is_not_damage_and_is_removed_with_zone ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/clove.rs (/tmp/valorant-horizon-vh5da7h5/engine/target/debug/deps/clove-03e8c80396f90337)
+
+running 11 tests
+test dead_player_can_only_issue_clove_utility_commands ... ok
+test kill_credit_deduplicates_pickup_and_removes_assist ... ok
+test contribution_window_and_capacity_are_bounded ... ok
+test meddle_has_fuse_decays_without_damage_and_cleans_up ... ok
+test meddle_respects_protected_targets_and_includes_owner ... ok
+test pickup_requires_recent_kill_or_damaging_assist_and_expires ... ok
+test meddle_pulse_is_nonlethal_and_repaid_via_shared_ledger ... ok
+test resurrection_is_explicitly_disabled_and_selection_is_registered ... ok
+test ruse_capacity_cancel_and_respawn_do_not_refund_spent_charges ... ok
+test ruse_after_death_retains_marks_and_confirms_real_smokes ... ok
+test spectator_transition_clears_death_targeting ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/harbor.rs (/tmp/valorant-horizon-vh5da7h5/engine/target/debug/deps/harbor-75c31f55f7a28534)
+
+running 13 tests
+test closest_divide_or_shield_receives_the_hit ... ok
+test cancellation_and_selection_preserve_spent_charges ... ok
+test cove_and_wall_have_bounded_lifetimes ... ok
+test high_tide_guides_then_keeps_direction_on_release_and_can_stop ... ok
+test cove_placement_and_one_time_shield_are_separate ... ok
+test native_arrow_padding_preserves_a_grazing_target_before_cove ... ok
+test prepared_tide_remains_equipped_until_stopped ... ok
+test shield_blocks_at_boundary_breaks_and_does_not_regenerate ... ok
+test shield_blocks_shots_from_inside_and_does_not_block_inside_targets ... ok
+test shield_does_not_steal_hits_before_it_or_behind_terrain ... ok
+test simultaneous_shields_damage_only_nearest_boundary ... ok
+test water_wall_slows_without_fire_damage_and_expires ... ok
+test storm_waits_before_nearsight_and_reckoning_hits_once ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/jett.rs (/tmp/valorant-horizon-vh5da7h5/engine/target/debug/deps/jett-bb31901c847f159b)
+
+running 9 tests
+test charge_recovery_is_sequential_and_cancel_does_not_refund ... ok
+test cloud_steers_and_expires_while_replay_and_bad_slot_do_nothing ... ok
+test disconnected_player_keeps_spent_charge_and_active_knives_are_cancelled ... ok
+test kill_credit_deduplicates_and_recharges_tailwind_after_two_kills ... ok
+test knife_hits_nearest_entity_headshot_and_single_kill_refills ... ok
+test dash_is_two_stage_and_cannot_tunnel_or_enter_unloaded_chunks ... ok
+test updraft_consumes_only_on_valid_space_and_glide_clamps_fall ... ok
+test wall_stops_knives_and_alt_kill_does_not_refill ... ok
+test snapshot_round_trips_large_uuid_and_forged_commands_are_rejected ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/omen.rs (/tmp/valorant-horizon-vh5da7h5/engine/target/debug/deps/omen-a8e446235ce58119)
+
+running 6 tests
+test destroyed_shade_cancels_ultimate_and_manual_cancel_never_teleports ... ok
+test dark_cover_moves_marker_and_passes_wall_before_becoming_smoke ... ok
+test paranoia_hits_once_through_wall_and_restricts_real_player_vision ... ok
+test shrouded_step_channels_then_moves_and_stays_in_loaded_clear_space ... ok
+test stale_agent_request_cannot_trigger_different_agents_ability ... ok
+test teleport_destination_is_stopped_before_obstructing_wall ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/phoenix.rs (/tmp/valorant-horizon-vh5da7h5/engine/target/debug/deps/phoenix-2de54b5aa89319af)
+
+running 5 tests
+test blocked_anchor_never_places_player_inside_wall ... ok
+test final_damage_interception_requests_return_without_death ... ok
+test own_fire_heals_phoenix_and_damages_other_player ... ok
+test run_it_back_returns_and_restores_full_health ... ok
+test blaze_creates_damaging_wall_and_flash_orb_curves ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/protocol.rs (/tmp/valorant-horizon-vh5da7h5/engine/target/debug/deps/protocol-0685057845fe7201)
+
+running 1 test
+test maximal_snapshot_fits_native_payload_budget ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/raze.rs (/tmp/valorant-horizon-vh5da7h5/engine/target/debug/deps/raze-d86f3ef98c5c3aac)
+
+running 6 tests
+test blast_pack_launches_owner_without_own_damage ... ok
+test boom_bot_acquires_visible_target_moves_and_explodes_on_contact ... ok
+test kills_restore_paint_shells_and_launcher_cancellation_does_not_refund ... ok
+test paint_shells_split_into_four_real_submunitions ... ok
+test rocket_uses_swept_collision_and_explosion_is_blocked_by_wall ... ok
+test satchel_reactivation_detonates_without_spending_second_charge ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/remote_view.rs (/tmp/valorant-horizon-vh5da7h5/engine/target/debug/deps/remote_view-994b179273b472bd)
+
+running 4 tests
+test camera_does_not_tunnel_through_wall ... ok
+test invalid_pose_and_limits_fail_closed ... ok
+test remote_targeting_uses_remote_eye_and_checks_occlusion ... ok
+test bounded_motion_does_not_move_owner ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/reyna.rs (/tmp/valorant-horizon-vh5da7h5/engine/target/debug/deps/reyna-6bdfbf7111c799dc)
+
+running 7 tests
+test cannot_heal_or_phase_without_kill ... ok
+test devour_heals_but_link_does_not_pass_through_wall ... ok
+test cancelled_death_yields_no_orb_and_duplicate_events_yield_one ... ok
+test empress_kill_renews_and_autoheal_does_not_consume_orb ... ok
+test overheal_decays_and_dismiss_expires_without_free_charge ... ok
+test soul_lasts_three_seconds_and_shared_pool_is_not_duplicated ... ok
+test leer_is_destructible_and_only_affects_enemies_looking_at_it ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/sage.rs (/tmp/valorant-horizon-vh5da7h5/engine/target/debug/deps/sage-a48220dc61c81801)
+
+running 5 tests
+test barrier_places_real_blocks_and_rotation_changes_axis ... ok
+test healing_requires_injured_visible_target_and_channels_over_time ... ok
+test resurrection_is_explicitly_unavailable_and_slow_has_real_status ... ok
+test ledger_survives_reload_and_cleanup_preserves_replacements ... ok
+test wall_rejects_occupied_space_without_overwrite_or_charge ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/sova.rs (/tmp/valorant-horizon-vh5da7h5/engine/target/debug/deps/sova-e4f4599a8bba1486)
+
+running 17 tests
+test arrow_pool_full_rejects_release_without_spending ... ok
+test bow_charge_release_and_bounce_selection_spend_exactly_one_charge ... ok
+test destroyed_emitter_never_scans_and_active_one_pulses_then_expires ... ok
+test drone_dart_uses_remote_origin_cooldown_and_marks_a_real_hit ... ok
+test drone_expiry_and_blocked_deployment_do_not_refill_charges ... ok
+test drone_moves_camera_and_freezes_vulnerable_body_then_destruction_cancels ... ok
+test fury_cannot_start_a_windup_that_would_outlive_its_timer ... ok
+test fury_has_windup_three_shots_wall_penetration_and_cancel_no_refund ... ok
+test fury_kills_are_credited_and_protected_targets_are_not_revealed ... ok
+test fury_stops_before_unknown_chunks_and_can_fire_only_three_times ... ok
+test recon_arrow_creates_destructible_emitter_and_unknown_chunk_fails_closed ... ok
+test recon_los_and_private_team_contacts_do_not_leak_to_enemies ... ok
+test shock_bolt_does_real_radial_damage_including_owner_and_respects_cover ... ok
+test snapshot_camera_cancel_and_dimension_change_preserve_cooldowns ... ok
+test two_bounces_reflect_normals_then_explode_on_third_collision ... ok
+test utility_raycast_respects_nearest_actor_shield_divide_and_object ... ok
+test contacts_and_tags_expire_and_have_bounded_capacity ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/viper.rs (/tmp/valorant-horizon-vh5da7h5/engine/target/debug/deps/viper-5af3f4c66a018df4)
+
+running 10 tests
+test crossing_a_thin_screen_is_detected ... ok
+test cancellation_and_death_remove_fields ... ok
+test decay_is_nonlethal_reversible_and_does_not_refund_normal_damage ... ok
+test fields_snapshot_fuel_and_offline_recovery ... ok
+test outside_healing_does_not_bypass_active_decay_cap ... ok
+test pit_collapses_when_owner_leaves_and_capacity_is_bounded ... ok
+test decay_ledger_recovers_after_session_reload ... ok
+test protected_targets_do_not_receive_decay ... ok
+test shared_fuel_and_regeneration ... ok
+test snake_bite_is_real_damage_and_slow ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests valorant_horizon_engine
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
++ cargo build --manifest-path /tmp/valorant-horizon-vh5da7h5/engine/Cargo.toml --release
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling syn v3.0.9
+   Compiling serde v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling itoa v1.0.18
+   Compiling memchr v2.8.3
+   Compiling serde_derive v1.0.229
+   Compiling valorant-horizon-engine v0.3.0-dev.4 (/tmp/valorant-horizon-vh5da7h5/engine)
+    Finished `release` profile [optimized] target(s) in 16.68s

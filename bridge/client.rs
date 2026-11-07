@@ -14,7 +14,7 @@ impl Game<'_> {
                 return;
             };
             s.sequence = s.sequence.saturating_add(1);
-            if matches!(&action,Action::Activate(slot) if (s.selected==0 && *slot==3)||(((s.selected==1||s.selected==2) && *slot<3)||(s.selected==3 && *slot!=1)||(s.selected==4 && *slot!=1)||(s.selected==5 && *slot==0)||(s.selected==6)||(s.selected==7)||(s.selected==8 && *slot==3)||(s.selected==9)||(s.selected==10 && (*slot==1||*slot==2))))
+            if matches!(&action,Action::Activate(slot) if (s.selected==0 && *slot==3)||(((s.selected==1||s.selected==2) && *slot<3)||(s.selected==3 && *slot!=1)||(s.selected==4 && *slot!=1)||(s.selected==5 && *slot==0)||(s.selected==6)||(s.selected==7)||(s.selected==8 && *slot==3)||(s.selected==9)||(s.selected==10 && (*slot==1||*slot==2))||(s.selected==11)))
             {
                 s.pending_equipped = Some(s.sequence);
             }
@@ -205,6 +205,10 @@ impl Game<'_> {
                     quad,
                     [0.0, 0.0, 16.0, 16.0],
                     match object.kind {
+                        valorant_horizon_engine::gameplay::objects::ObjectKind::Drone
+                        | valorant_horizon_engine::gameplay::objects::ObjectKind::ReconBolt => {
+                            [60, 170, 240, 255]
+                        }
                         valorant_horizon_engine::gameplay::objects::ObjectKind::Leer => {
                             [180, 45, 210, 255]
                         }
@@ -222,6 +226,47 @@ impl Game<'_> {
                         }
                     },
                 );
+            }
+        }
+        for o in &snapshot.objects {
+            use valorant_horizon_engine::gameplay::{
+                geometry::{add, scale},
+                objects::ObjectKind as K,
+            };
+            if matches!(o.kind, K::Drone) {
+                let angle = draw.game_time as f64 * 0.8;
+                let dir = [angle.sin(), 0., angle.cos()];
+                for side in [-0.3, 0.3] {
+                    let at = sub(add(o.position, [side, 0.22, 0.]), draw.camera);
+                    for q in valorant_horizon_engine::gameplay::projectiles::beam(
+                        add(at, scale(dir, -0.2)),
+                        add(at, scale(dir, 0.2)),
+                        0.03,
+                    ) {
+                        self.native_world_quad(
+                            draw,
+                            "horizon/white",
+                            q,
+                            [0., 0., 16., 16.],
+                            [180, 220, 240, 255],
+                        );
+                    }
+                }
+            }
+            if matches!(o.kind, K::ReconBolt) {
+                let phase = f64::from(60u32.saturating_sub(o.ticks) % 20) / 20.;
+                for q in sphere(
+                    sub(add(o.position, [0., 0.1, 0.]), draw.camera),
+                    0.2 + phase * 4.,
+                ) {
+                    self.native_world_quad(
+                        draw,
+                        "horizon/white",
+                        q,
+                        [0., 0., 16., 16.],
+                        [50, 160, 255, (80. * (1. - phase)) as u8],
+                    );
+                }
             }
         }
         for f in &snapshot.toxins {
@@ -292,11 +337,27 @@ impl Game<'_> {
                 }
             }
         }
+        for b in &snapshot.beams {
+            for q in valorant_horizon_engine::gameplay::projectiles::beam(
+                sub(b.from, draw.camera),
+                sub(b.to, draw.camera),
+                0.35,
+            ) {
+                self.native_world_quad(
+                    draw,
+                    "horizon/white",
+                    q,
+                    [0., 0., 16., 16.],
+                    [75, 170, 255, 210],
+                );
+            }
+        }
         for projectile in &snapshot.projectiles {
             use valorant_horizon_engine::gameplay::projectiles::ProjectileKind as P;
             let color = match projectile.kind {
                 P::Incendiary { .. } => [255, 140, 15, 255],
                 P::SnakeBite | P::PoisonEmitter => [95, 225, 30, 255],
+                P::SovaBolt { .. } | P::ReconDart => [80, 195, 255, 255],
                 P::Meddle => [180, 100, 220, 255],
                 P::StormSurge | P::Reckoning => [35, 175, 230, 230],
                 P::Cloudburst => [180, 220, 240, 255],
@@ -319,7 +380,10 @@ impl Game<'_> {
                     },
                     draw.camera,
                 )
-            } else if matches!(projectile.kind, P::Knife { .. }) {
+            } else if matches!(
+                projectile.kind,
+                P::Knife { .. } | P::SovaBolt { .. } | P::ReconDart
+            ) {
                 valorant_horizon_engine::gameplay::projectiles::blade(center, projectile.velocity)
             } else {
                 sphere(center, 0.15)

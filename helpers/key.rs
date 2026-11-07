@@ -15,10 +15,10 @@ fn valorant_key(game: &mut crate::game::Game<'_>, key: &str, pressed: bool) {
     if !pressed {
         if let Ok(mut s) = state().lock() {
             if key == "key.mouse.left" {
-                s.key_transition("astra.attack", false);
+                s.key_transition("ability.attack", false);
             }
             if key == "key.mouse.right" {
-                s.key_transition("astra.use", false);
+                s.key_transition("ability.use", false);
             }
         }
         if key == "key.mouse.left" {
@@ -98,6 +98,10 @@ fn valorant_key(game: &mut crate::game::Game<'_>, key: &str, pressed: bool) {
             if let Some(i) = DEFAULTS.iter().position(|k| *k == key) {
                 s.rebind = Some(i);
                 return;
+            }
+            if key == "key.keyboard.equal" && s.select(11) {
+                action = Some(Action::Select(11));
+                save = Some("sova");
             }
             if key == "key.keyboard.minus" && s.select(10) {
                 action = Some(Action::Select(10));

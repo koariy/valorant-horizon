@@ -80,7 +80,7 @@ fn intercept_until(
     }
 }
 
-fn impact_limit(w: &impl World, from: V3, to: V3, padding: CollisionPadding) -> f64 {
+pub fn impact_limit(w: &impl World, from: V3, to: V3, padding: CollisionPadding) -> f64 {
     let limit = block_hit(w, from, to, padding.terrain).unwrap_or(1.);
     w.actors()
         .iter()
