@@ -1,0 +1,11 @@
+   Compiling horizon-world v0.1.0 (/workspace/work/staged/crates/horizon-world)
+   Compiling horizon-client-core v0.1.0 (/workspace/work/staged/crates/horizon-client-core)
+   Compiling horizon-protocol v0.1.0 (/workspace/work/staged/crates/horizon-protocol)
+   Compiling horizon-command v0.1.0 (/workspace/work/staged/crates/horizon-command)
+   Compiling horizon-client-input v0.1.0 (/workspace/work/staged/crates/horizon-client-input)
+   Compiling horizon-items v0.1.0 (/workspace/work/staged/crates/horizon-items)
+   Compiling horizon-server-files v0.1.0 (/workspace/work/staged/crates/horizon-server-files)
+   Compiling horizon-client-render v0.1.0 (/workspace/work/staged/crates/horizon-client-render)
+   Compiling horizon-client-lib v0.1.0 (/workspace/work/staged/crates/horizon-client-lib)
+   Compiling horizon-client v0.1.0 (/workspace/work/staged/crates/horizon-client)
+    Finished `dev` profile [unoptimized] target(s) in 2m 32s

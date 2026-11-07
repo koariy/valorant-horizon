@@ -1,0 +1,16 @@
+    Updating crates.io index
+     Locking 11 packages to highest Rust 1.99.1 compatible versions
+      Adding serde_json v1.0.151 (available: v1.0.154)
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling syn v3.0.9
+   Compiling serde v1.0.229
+   Compiling serde_json v1.0.151
+    Checking memchr v2.8.3
+   Compiling serde_derive v1.0.229
+    Checking itoa v1.0.18
+    Checking valorant-horizon-engine v0.2.0 (/workspace/valorant-horizon/engine)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 6.10s

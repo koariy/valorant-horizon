@@ -1,0 +1,35 @@
+{
+  "url": "https://playvalorant.com/en-us/agents/clove/",
+  "retrieved": "2026-11-07",
+  "html_sha256": "d880fe699b487b73ffbb1e2629588f4b717442428a4cc0a11f1de0fd11ee3e24",
+  "abilities": [
+    {
+      "title": "Meddle",
+      "description": {
+        "type": "html",
+        "body": "EQUIP a fragment of immortality essence. FIRE to throw the fragment, which erupts after a short delay and temporarily decays all targets caught inside."
+      }
+    },
+    {
+      "title": "Ruse",
+      "description": {
+        "type": "html",
+        "body": "EQUIP to view the battlefield. FIRE to set the locations where Clove\u2019s clouds will settle. ALT FIRE to confirm, launching clouds that block vision in the chosen areas. Clove can use this ability after death."
+      }
+    },
+    {
+      "title": "Pick-Me-Up",
+      "description": {
+        "type": "html",
+        "body": "INSTANTLY absorb the life force of a fallen enemy that Clove damaged or killed, gaining haste and temporary health."
+      }
+    },
+    {
+      "title": "Not Dead Yet",
+      "description": {
+        "type": "html",
+        "body": "After dying, ACTIVATE to resurrect. Once resurrected, Clove must earn a kill or a damaging assist within a set time or they will die."
+      }
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "url": "https://playvalorant.com/en-us/agents/harbor/",
+  "retrieved": "2026-11-07",
+  "html_sha256": "005b8322acf4e1bbf024dd19c067c9543c1a69186d93c1efa9a0d2dc6951899f",
+  "abilities": [
+    {
+      "title": "HIGH TIDE",
+      "description": {
+        "type": "html",
+        "body": "<p>EQUIP High Tide. FIRE to send water forward along the ground. HOLD FIRE to guide the water towards your crosshair spawning a vision blocking Screen along the path. ALT FIRE to stop the water early. All players crossing High Tide are Slowed.</p>"
+      }
+    },
+    {
+      "title": "STORM SURGE",
+      "description": {
+        "type": "html",
+        "body": "<p>EQUIP Storm Surge. FIRE to throw, creating an explosive whirlpool that Nearsights and Slows enemies within it after a short duration.</p>"
+      }
+    },
+    {
+      "title": "COVE (COVE SMOKE)",
+      "description": {
+        "type": "html",
+        "body": "<p>EQUIP Cove. ACTIVATE to form a water Smoke in the select location. HOLD FIRE while targeting to move the marker further away and HOLD ALT FIRE to move it closer. RELOAD to toggle targeting view. REACTIVATE to Shield the water Smoke, blocking any bullets that hit it. The Shielded water Smoke can be destroyed.</p>"
+      }
+    },
+    {
+      "title": "RECKONING",
+      "description": {
+        "type": "html",
+        "body": "<p>EQUIP Reckoning. FIRE to unleash the full power of your artifact, releasing a surge of water that barrels forward to Nearsight and Slow enemies that are hit.</p>"
+      }
+    }
+  ]
+}

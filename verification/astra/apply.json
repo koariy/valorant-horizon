@@ -1,0 +1,14 @@
+{
+  "bridges": 0,
+  "crates": 2,
+  "data": 0,
+  "injections": 23,
+  "modules": 5,
+  "post_build": 0,
+  "seconds": 50.675188534,
+  "stage": "/workspace/work/staged",
+  "stage_changed": true,
+  "states": 0,
+  "status": "ok",
+  "transformation_seconds": 50.674862985
+}

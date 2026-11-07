@@ -1,0 +1,19 @@
+test_argument_errors_do_not_repeat_sensitive_arguments (test_deepseek_delegate.ClientTests.test_argument_errors_do_not_repeat_sensitive_arguments) ... ok
+test_bad_or_truncated_response_is_explicit (test_deepseek_delegate.ClientTests.test_bad_or_truncated_response_is_explicit) ... ok
+test_delegate_has_bounded_non_thinking_proposal_only_payload (test_deepseek_delegate.ClientTests.test_delegate_has_bounded_non_thinking_proposal_only_payload) ... ok
+test_errors_do_not_echo_provider_body_or_exception (test_deepseek_delegate.ClientTests.test_errors_do_not_echo_provider_body_or_exception) ... ok
+test_no_key_disables_without_network_or_input (test_deepseek_delegate.ClientTests.test_no_key_disables_without_network_or_input) ... ok
+test_no_redirect_can_forward_authorization (test_deepseek_delegate.ClientTests.test_no_redirect_can_forward_authorization) ... ok
+test_oversized_response_rejected (test_deepseek_delegate.ClientTests.test_oversized_response_rejected) ... ok
+test_probe_401_means_reachable_not_authenticated (test_deepseek_delegate.ClientTests.test_probe_401_means_reachable_not_authenticated) ... ok
+test_secondary_task_uses_official_endpoint_and_env_header (test_deepseek_delegate.ClientTests.test_secondary_task_uses_official_endpoint_and_env_header) ... ok
+test_secret_in_output_is_redacted_and_tool_calls_rejected (test_deepseek_delegate.ClientTests.test_secret_in_output_is_redacted_and_tool_calls_rejected) ... ok
+test_secret_in_task_rejected_before_network (test_deepseek_delegate.ClientTests.test_secret_in_task_rejected_before_network) ... ok
+test_timeout_terminates_worker (test_deepseek_delegate.ClientTests.test_timeout_terminates_worker) ... ok
+test_cli_failure_releases_lease_and_reports_fallback (test_deepseek_delegate.LimiterTests.test_cli_failure_releases_lease_and_reports_fallback) ... ok
+test_shared_pacing_lease_daily_cap_and_expiry (test_deepseek_delegate.LimiterTests.test_shared_pacing_lease_daily_cap_and_expiry) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.056s
+
+OK

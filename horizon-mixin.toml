@@ -1,0 +1,317 @@
+[mod]
+id = "valorant_horizon"
+version = "0.3.0-dev.3"
+
+[compatibility]
+horizon_revision = "41f822b659789780f58d32c63ddfb6887ea1b8bf"
+
+[[crate]]
+id = "engine"
+path = "engine"
+
+[[injection]]
+id = "key"
+hook = "key"
+hook_version = 1
+kind = "HEAD"
+helper = "helpers/key.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "key", ty = "&str", value = "key" },
+  { name = "pressed", ty = "bool", value = "pressed" },
+]
+
+[[injection]]
+id = "client_tick_post"
+target = "horizon_client::game::native_hooks::Game<'_>::native_client_tick_post"
+kind = "HEAD"
+helper = "helpers/client_tick_post.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+]
+
+[[injection]]
+id = "hud"
+hook = "hud"
+hook_version = 1
+kind = "HEAD"
+helper = "helpers/hud.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "batch", ty = "&mut crate::hud::HudBatch", value = "batch" },
+  { name = "corners", ty = "&mut crate::extras_hud::Corners", value = "corners" },
+]
+
+[[module]]
+id = "module_server"
+file = "crates/horizon-client/src/game.rs"
+name = "valorant_server"
+source = "bridge/server.rs"
+
+[[module]]
+id = "module_client"
+file = "crates/horizon-client/src/game.rs"
+name = "valorant_client"
+source = "bridge/client.rs"
+
+[[module]]
+id = "module_damage"
+file = "crates/horizon-client/src/game/commands/world_cmds.rs"
+name = "valorant_damage"
+source = "bridge/damage.rs"
+
+[[injection]]
+id = "level_tick_post"
+hook = "level_tick_post"
+hook_version = 1
+kind = "HEAD"
+helper = "helpers/server_tick.rs"
+bindings = [
+  {name="game", ty="&mut crate::game::Game<'_>", value="&mut *self"},
+  {name="dimension",ty="&str",value="dimension"},
+]
+
+[[injection]]
+id = "net_from_client"
+hook = "net_from_client"
+hook_version = 1
+kind = "HEAD"
+helper = "helpers/net_client.rs"
+bindings = [
+  {name="game", ty="&mut crate::game::Game<'_>", value="&mut *self"},
+  {name="player",ty="u128",value="player"},
+  {name="channel",ty="&str",value="channel"},
+  {name="data",ty="&[u8]",value="data"},
+]
+
+[[injection]]
+id = "net_from_server"
+hook = "net_from_server"
+hook_version = 1
+kind = "HEAD"
+helper = "helpers/net_server.rs"
+bindings = [
+  {name="game", ty="&mut crate::game::Game<'_>", value="&mut *self"},
+  {name="channel",ty="&str",value="channel"},
+  {name="data",ty="&[u8]",value="data"},
+]
+
+[[injection]]
+id = "world_submit"
+target = "horizon_client::game::native_hooks::Game<'_>::native_world_submit"
+kind = "HEAD"
+helper = "helpers/world.rs"
+bindings = [
+  {name="game", ty="&crate::game::Game<'_>", value="&*self"},
+  {name="draw",ty="&mut crate::game::native_world_draw::NativeWorldDraw",value="draw"},
+]
+
+[[injection]]
+id = "render_fog"
+hook = "render_fog"
+hook_version = 1
+kind = "HEAD"
+helper = "helpers/fog.rs"
+bindings = [
+  {name="game", ty="&crate::game::Game<'_>", value="&*self"},
+  {name="camera",ty="[f64;3]",value="camera"},
+  {name="fog",ty="&mut horizon_client::fog::FogData",value="fog"},
+]
+
+[[injection]]
+id = "interaction_key"
+hook = "interaction_key"
+hook_version = 1
+kind = "HEAD"
+helper = "helpers/interaction.rs"
+bindings = [
+  {name="game", ty="&mut crate::game::Game<'_>", value="&mut *self"},
+  {name="button",ty="i32",value="button"},
+  {name="canceled",ty="&mut bool",value="canceled"},
+  {name="swing_hand",ty="&mut bool",value="swing_hand"},
+]
+
+[[injection]]
+id = "client_level_unload"
+hook = "client_level_unload"
+hook_version = 1
+kind = "HEAD"
+helper = "helpers/unload.rs"
+bindings = [
+  {name="game", ty="&mut crate::game::Game<'_>", value="&mut *self"},
+]
+
+[[injection]]
+id = "server_stopping"
+hook = "server_stopping"
+hook_version = 1
+kind = "HEAD"
+helper = "helpers/stop.rs"
+bindings = [
+  {name="game", ty="&mut crate::game::Game<'_>", value="&mut *self"},
+]
+
+[[injection]]
+id="consume_key"
+target="horizon_client::game::Game<'_>::key_pressed"
+kind="HEAD"
+cancellable=true
+helper="helpers/consume_key.rs"
+bindings=[
+ {name="game",ty="&crate::game::Game<'_>",value="&*self"},
+ {name="raw",ty="winit::keyboard::KeyCode",value="raw"},
+]
+
+[[injection]]
+id="enable_world_canvas"
+target="horizon_client::game::native_world_draw::Game<'_>::native_world_geometry"
+kind="HEAD"
+cancellable=true
+helper="helpers/world_enable.rs"
+bindings=[
+ {name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"},
+ {name="camera",ty="glam::DVec3",value="camera"},
+ {name="partial",ty="f32",value="partial"},
+ {name="out",ty="&mut Vec<horizon_client::mesher::Vertex>",value="out"},
+]
+
+[[injection]]
+id="damage_pre"
+target="horizon_client::game::native_hooks::Game<'_>::native_living_damage_pre"
+kind="HEAD"
+helper="helpers/damage_pre.rs"
+bindings=[
+ {name="entity",ty="i32",value="entity"},
+ {name="amount",ty="&mut f32",value="amount"},
+]
+
+[[injection]]
+id="damage_post"
+target="horizon_client::game::native_hooks::Game<'_>::native_living_damage_post"
+kind="HEAD"
+helper="helpers/damage_post.rs"
+bindings=[
+ {name="causing",ty="i32",value="causing"},
+ {name="entity",ty="i32",value="entity"},
+ {name="amount",ty="f32",value="amount"},
+]
+
+[[injection]]
+id="barrier_ownership"
+hook="block_changed"
+hook_version=1
+kind="HEAD"
+helper="helpers/block_changed.rs"
+bindings=[
+ {name="level",ty="&crate::game::GameLevel<'_>",value="&*self"},
+ {name="dimension",ty="horizon_client::mod_api::LevelDimension",value="dimension"},
+ {name="pos",ty="horizon_core::position::BlockPos",value="pos"},
+ {name="old",ty="horizon_client::mod_api::BlockStateId",value="old"},
+ {name="new",ty="horizon_client::mod_api::BlockStateId",value="new"},
+]
+
+[[injection]]
+id="ability_protection"
+target="horizon_client::game::native_hooks::Game<'_>::native_living_incoming_damage"
+kind="HEAD"
+helper="helpers/incoming.rs"
+bindings=[
+ {name="entity",ty="i32",value="entity"},
+ {name="damage_type",ty="&str",value="damage_type"},
+ {name="causing",ty="i32",value="causing"},
+ {name="direct",ty="i32",value="direct"},
+ {name="canceled",ty="&mut bool",value="canceled"},
+]
+
+
+[[module]]
+id="module_deaths"
+file="crates/horizon-client/src/game/lan_actions.rs"
+name="valorant_deaths"
+source="bridge/deaths.rs"
+
+[[injection]]
+id="mob_death_credit"
+target="horizon_client::game::creatures::Game<'_>::mob_died"
+kind="HEAD"
+helper="helpers/mob_death.rs"
+bindings=[
+{name="game",ty="&crate::game::Game<'_>",value="&*self"},
+{name="mob",ty="&horizon_client::mobs::Mob",value="m"}]
+
+
+[[injection]]
+id="player_death_credit"
+target="horizon_client::game::lan_actions::Game<'_>::guest_die"
+kind="HEAD"
+helper="helpers/player_death.rs"
+bindings=[
+{name="game",ty="&crate::game::Game<'_>",value="&*self"},
+{name="host",ty="&crate::game::lan::LanHost",value="&*host"},
+{name="index",ty="usize",value="gi"},
+{name="connection",ty="u32",value="conn"}]
+
+
+[[crate]]
+id="spatial"
+path="spatial"
+dependent="horizon-client-render"
+
+[[injection]]
+id="astra_camera"
+target="horizon_client::game::native_hooks::Game<'_>::native_camera_pose"
+kind="HEAD"
+helper="helpers/astra_camera.rs"
+bindings=[{name="position",ty="&mut [f64;3]",value="position"}]
+
+[[injection]]
+id="astra_hand"
+target="horizon_client::game::native_hooks::Game<'_>::native_render_hand"
+kind="HEAD"
+helper="helpers/astra_hand.rs"
+bindings=[{name="canceled",ty="&mut bool",value="canceled"}]
+
+[[injection]]
+id="astra_sound"
+target="horizon_client_render::sound_engine::SoundInstance::get_volume"
+kind="RETURN"
+helper="helpers/astra_audio.rs"
+bindings=[
+{name="value",ty="f32",value="$value"},
+{name="instance",ty="&crate::sound_engine::SoundInstance",value="&*self"}]
+
+[[injection]]
+id="astra_arrows"
+target="horizon_client::game::creatures::Game<'_>::tick_projectiles"
+kind="HEAD"
+helper="helpers/astra_arrows.rs"
+bindings=[{name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"}]
+
+
+[[module]]
+id="spatial_export"
+file="crates/horizon-client-render/src/lib.rs"
+name="valorant_spatial"
+visibility="pub"
+source="bridge/spatial.rs"
+
+[[injection]]
+id="clove_death_hud"
+target="horizon_client::game::native_hooks::Game<'_>::native_screen_render_post"
+kind="HEAD"
+helper="helpers/clove_death_hud.rs"
+bindings=[
+ {name="game",ty="&crate::game::Game<'_>",value="self"},
+ {name="batch",ty="&mut crate::hud::HudBatch",value="batch"},
+]
+
+[[injection]]
+id="clove_death_consume"
+target="horizon_client::game::screens::Game<'_>::death_key"
+kind="HEAD"
+cancellable=true
+helper="helpers/clove_death_consume.rs"
+bindings=[
+ {name="game",ty="&crate::game::Game<'_>",value="&*self"},
+ {name="key",ty="winit::keyboard::KeyCode",value="key"},
+]
