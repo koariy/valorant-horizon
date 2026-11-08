@@ -139,17 +139,19 @@ pub fn block_collision(world: &impl World, from: V3, to: V3, r: f64) -> Option<C
                     if let Some(t) = b.segment(from, to)
                         && first.as_ref().is_none_or(|old| t < old.time)
                     {
-                        let at = add(from, scale(sub(to, from), t));
-                        let (axis, sign) = (0..3)
-                            .flat_map(|i| [(i, -1.), (i, 1.)])
-                            .min_by(|(i, a), (j, bside)| {
-                                let a =
-                                    (at[*i] - if *a < 0. { b.min[*i] } else { b.max[*i] }).abs();
-                                let b = (at[*j] - if *bside < 0. { b.min[*j] } else { b.max[*j] })
-                                    .abs();
-                                a.total_cmp(&b)
+                        // The entry plane, rather than the nearest face at the hit point,
+                        // determines the normal. At block edges a parallel face can be
+                        // equally close, but reflecting/placing against it is incorrect.
+                        let (axis, _) = (0..3)
+                            .filter(|i| (to[*i] - from[*i]).abs() > 1e-12)
+                            .map(|i| {
+                                let d = to[i] - from[i];
+                                let plane = if d > 0. { b.min[i] } else { b.max[i] };
+                                (i, (plane - from[i]) / d)
                             })
-                            .unwrap();
+                            .max_by(|(_, a), (_, b)| a.total_cmp(b))
+                            .unwrap_or((0, 0.));
+                        let sign = if to[axis] > from[axis] { -1. } else { 1. };
                         let mut normal = [0.; 3];
                         normal[axis] = sign;
                         first = Some(Collision {

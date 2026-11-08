@@ -1,0 +1,23 @@
+{
+  "url": "https://playvalorant.com/en-us/agents/cypher/",
+  "date": "2026-11-08",
+  "html_sha256": "9e48edb78d212a39b451df45294b791aade0eb254fe6e63391318bf6fe6e0965",
+  "abilities": [
+    {
+      "name": "CYBER CAGE",
+      "description": "INSTANTLY toss the cyber cage in front of Cypher. Activate to create a zone that blocks vision and slows enemies who pass through it."
+    },
+    {
+      "name": "SPYCAM",
+      "description": "EQUIP a spycam. FIRE to place the spycam at the targeted location. RE-USE this ability to take control of the camera's view. While in control of the camera, FIRE to shoot a marking dart. This dart will Reveal the location of any player struck by the dart. This ability can be picked up to be REDEPLOYED."
+    },
+    {
+      "name": "TRAPWIRE",
+      "description": "EQUIP a trapwire. FIRE to place a destructible and covert tripwire at the targeted location creating a line that spans between the placed location and the wall opposite. Enemy players who cross a tripwire will be tethered, revealed, and dazed after a short period if they do not destroy the device in time. This ability can be picked up to be REDEPLOYED."
+    },
+    {
+      "name": "NEURAL THEFT",
+      "description": "INSTANTLY use on a dead enemy player in your crosshairs to reveal the location of all living enemy players."
+    }
+  ]
+}

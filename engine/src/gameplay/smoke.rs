@@ -5,6 +5,7 @@ pub struct Smoke {
     pub center: V3,
     pub radius: f64,
     pub ticks: u32,
+    #[serde(rename = "o")]
     pub owner: u128,
     pub color: [u8; 4],
 }

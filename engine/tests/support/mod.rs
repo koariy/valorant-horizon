@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+pub mod extra;
 use valorant_horizon_engine::gameplay::{geometry::*, *};
 pub fn actor(id: u128, p: V3) -> Actor {
     Actor {
@@ -97,7 +98,7 @@ impl World for TestWorld {
             return None;
         }
         let mut out = Vec::new();
-        if cell[1] == 0 {
+        if cell[1] == 0 || self.blocks.get(&cell).is_some_and(|b| b != "minecraft:air") {
             let p = cell.map(f64::from);
             out.push(Box3 {
                 min: p,

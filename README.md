@@ -1,12 +1,12 @@
-# Valorant Horizon — 0.3.0-dev.4
+# Valorant Horizon — 0.4.0-dev.1
 
-Добавлен Sova: V → =, см. `docs/SOVA.md`: Owl Drone, Shock Bolt, Recon Bolt и Hunter’s Fury. Итоговые проверки — `verification/sova/RESULTS.md`. Clove Not Dead Yet и Sage Resurrection остаются отключены до безопасной интеграции respawn. Это версия разработки: игровой запуск ещё не выполнен.
+Добавлен Cypher: V → стрелка вправо → 3. Trapwire, Cyber Cage, Spycam и Neural Theft описаны в `docs/CYPHER.md`; проверки — `verification/cypher/RESULTS.md`. Clove Not Dead Yet и Sage Resurrection остаются отключены до безопасной интеграции respawn. Это версия разработки: игровой запуск ещё не выполнен.
 
 Текущая разработка следующей группы: `docs/GROUP2.md`. Интеграция необязательного помощника DeepSeek: `docs/DEEPSEEK.md`, CLI `scripts/deepseek_delegate.py`; без ключа работает только Codex.
 
 В исходниках добавлены Brimstone (V → 7) и Viper (V → 8, `docs/VIPER.md`); архивы dist/0.2.0 относятся к предыдущему выпуску. Игровая приёмка этих агентов ещё не выполнена.
 
-Продолжение существующего Rust/.hnmod проекта для обычного мира Horizon: двенадцать агентов, серверная симуляция способностей, меню, HUD и сохранение клавиш. Без раундов, Spike, экономики и обязательной зависимости от оружия. Это проверенная компиляцией и headless-тестами реализация; проверка в запущенной игре ещё нужна.
+Продолжение существующего Rust/.hnmod проекта для обычного мира Horizon: тринадцать агентов, серверная симуляция способностей, меню, HUD и сохранение клавиш. Без раундов, Spike, экономики и обязательной зависимости от оружия. Это проверенная компиляцией и headless-тестами реализация; проверка в запущенной игре ещё нужна.
 
 ## Совместимость
 
@@ -32,12 +32,13 @@
 | Harbor | High Tide, Storm Surge, Cove с HP щита, Reckoning; выбор Cove взглядом | `docs/HARBOR.md` |
 | Clove | Pick-Me-Up с damaging assist, Meddle decay, Ruse после смерти; Not Dead Yet отключена | `docs/CLOVE.md` |
 | Sova | управляемый дрон/дротик, заряжаемые Shock/Recon Bolt с отскоками, приватная разведка, три луча Fury | `docs/SOVA.md` |
+| Cypher | растяжки с HP/tether/reveal, активируемые клетки, камера с дротиком, раскрытие по подтверждённой смерти | `docs/CYPHER.md` |
 
 Resurrection требует проверенной интеграции respawn/инвентаря; подмена лечением отсутствует. Omen выбирает наземную точку взглядом до 64 блоков, отдельной тактической карты нет. Урон и тайминги адаптированы под Minecraft с 20 HP и обычными кулдаунами. Логические объекты имеют серверные HP; обычные/спектральные стрелы, трезубцы, ножи Jett, melee и общие взрывы могут поражать их. Прочие native projectiles отдельно не интегрированы. Дым и ограничение зрения не меняют зрение vanilla AI. Empress не ускоряет отсутствующую перезарядку оружия Valorant. Геометрические эффекты создаются кодом, оригинальные ассеты Riot не включены.
 
 ## Установка
 
-`dist/valorant_horizon-0.3.0-dev.4.hnmod` — исходный native bundle, для установки launcher пересобирает Horizon. Это не DLL и не Bukkit/Fabric-мод. Все участники и сервер должны использовать совместимую сборку Horizon с модом.
+`dist/valorant_horizon-0.4.0-dev.1.hnmod` — исходный native bundle, для установки launcher пересобирает Horizon. Это не DLL и не Bukkit/Fabric-мод. Все участники и сервер должны использовать совместимую сборку Horizon с модом.
 
 ```sh
 horizon-launcher settings native-profile dev
@@ -48,7 +49,7 @@ horizon-launcher native-build /absolute/path/to/valorant-horizon --instance YOUR
 
 ## Управление
 
-- V: открыть меню; 1 Jett, 2 Sage, 3 Phoenix, 4 Omen, 5 Raze, 6 Reyna, 7 Brimstone, 8 Viper, 9 Astra, 0 Harbor, минус (-) Clove, = Sova.
+- V: меню; Left/Right переключают страницы по 10 агентов. На первой странице 1 Jett, 2 Sage, 3 Phoenix, 4 Omen, 5 Raze, 6 Reyna, 7 Brimstone, 8 Viper, 9 Astra, 0 Harbor; на второй 1 Clove, 2 Sova, 3 Cypher. Сохранены быстрые клавиши минус (-) Clove и = Sova. R возвращает устройства Cypher вблизи.
 - C/Q/E/X: четыре слота. В меню та же клавиша выбирает слот для переназначения, следующая клавиша сохраняется. Esc отменяет ввод.
 - ЛКМ/ПКМ: применение подготовленной способности / альтернативное применение. Особые действия описаны в документации агента.
 - B: отмена подготовки/канала, потраченные заряды не возвращаются.

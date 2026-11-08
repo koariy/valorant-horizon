@@ -1,4 +1,5 @@
 pub mod abilities;
+pub mod advanced;
 pub mod agents;
 pub mod gameplay;
 pub mod server;
@@ -26,6 +27,7 @@ pub struct State {
     pub registry: Registry,
     pub selected: usize,
     pub menu: bool,
+    pub menu_page: usize,
     pub rebind: Option<usize>,
     pub loaded: bool,
     pub diagnostic: Option<String>,
@@ -43,6 +45,7 @@ impl Default for State {
             registry: Registry::default(),
             selected: 0,
             menu: false,
+            menu_page: 0,
             rebind: None,
             loaded: false,
             diagnostic: None,
@@ -127,7 +130,9 @@ impl State {
             lines.push(format!(
                 "{}: {}  {}/{}  CD {:.1}s{}",
                 key.trim_start_matches("key.keyboard."),
-                if self.selected == 0 {
+                if let Some(names) = advanced::names(self.selected) {
+                    names[i]
+                } else if self.selected == 0 {
                     agents::jett::NAMES[i]
                 } else if self.selected == 1 {
                     agents::sage::NAMES[i]
@@ -164,6 +169,20 @@ impl State {
             lines.push(info.clone());
         }
         if let Some(snapshot) = &self.snapshot {
+            if self.selected == 12 {
+                lines.push(format!(
+                    "Tripwires: {} | cage devices: {} | camera: {}",
+                    snapshot.kit[0],
+                    snapshot.kit[1],
+                    if snapshot.kit[3] > 0 {
+                        "viewing"
+                    } else if snapshot.kit[2] > 0 {
+                        "placed"
+                    } else {
+                        "none"
+                    }
+                ));
+            }
             if self.selected == 11 {
                 lines.push(format!(
                     "Bow: {:?}/30 | bounces: {} | Fury: {} | revealed: {}",
@@ -199,10 +218,19 @@ impl State {
             lines.push("Waiting for modded server".into());
         }
         if self.menu {
-            for (index, agent) in self.registry.agents().iter().enumerate() {
+            for (index, agent) in self
+                .registry
+                .agents()
+                .iter()
+                .enumerate()
+                .skip(self.menu_page * 10)
+                .take(10)
+            {
                 lines.push(format!(
                     "[{}] {}",
-                    if index == 11 {
+                    if self.menu_page > 0 {
+                        ((index % 10 + 1) % 10).to_string()
+                    } else if index == 11 {
                         "=".into()
                     } else if index == 10 {
                         "-".into()
@@ -214,7 +242,10 @@ impl State {
                     agent.name
                 ));
             }
-            lines.push("[C/Q/E/X] rebind slot | [V] close".into());
+            lines.push(format!(
+                "[Left/Right] page {} | [C/Q/E/X] rebind | [V] close",
+                self.menu_page + 1
+            ));
         }
 
         if self.rebind.is_some() {

@@ -14,7 +14,7 @@ impl Game<'_> {
                 return;
             };
             s.sequence = s.sequence.saturating_add(1);
-            if matches!(&action,Action::Activate(slot) if (s.selected==0 && *slot==3)||(((s.selected==1||s.selected==2) && *slot<3)||(s.selected==3 && *slot!=1)||(s.selected==4 && *slot!=1)||(s.selected==5 && *slot==0)||(s.selected==6)||(s.selected==7)||(s.selected==8 && *slot==3)||(s.selected==9)||(s.selected==10 && (*slot==1||*slot==2))||(s.selected==11)))
+            if matches!(&action,Action::Activate(slot) if (s.selected==0 && *slot==3)||(((s.selected==1||s.selected==2) && *slot<3)||(s.selected==3 && *slot!=1)||(s.selected==4 && *slot!=1)||(s.selected==5 && *slot==0)||(s.selected==6)||(s.selected==7)||(s.selected==8 && *slot==3)||(s.selected==9)||(s.selected==10 && (*slot==1||*slot==2))||(s.selected>=11)))
             {
                 s.pending_equipped = Some(s.sequence);
             }
@@ -148,6 +148,11 @@ impl Game<'_> {
                     [0.0, 0.0, 16.0, 16.0],
                     if matches!(
                         zone.kind,
+                        valorant_horizon_engine::gameplay::zones::ZoneKind::CyberCage
+                    ) {
+                        [70, 130, 145, 255]
+                    } else if matches!(
+                        zone.kind,
                         valorant_horizon_engine::gameplay::zones::ZoneKind::WaterWall
                     ) {
                         [35, 165, 220, 255]
@@ -196,6 +201,26 @@ impl Game<'_> {
             }
         }
         for object in &snapshot.objects {
+            if matches!(
+                object.kind,
+                valorant_horizon_engine::gameplay::objects::ObjectKind::Trapwire
+            ) {
+                for q in valorant_horizon_engine::gameplay::projectiles::beam(
+                    sub(object.position, draw.camera),
+                    sub(object.velocity, draw.camera),
+                    0.025,
+                ) {
+                    self.native_world_quad(
+                        draw,
+                        "horizon/white",
+                        q,
+                        [0., 0., 16., 16.],
+                        [60, 200, 220, 255],
+                    );
+                }
+                continue;
+            }
+
             for quad in
                 valorant_horizon_engine::gameplay::zones::box_quads(object.bounds(), draw.camera)
             {
@@ -205,6 +230,11 @@ impl Game<'_> {
                     quad,
                     [0.0, 0.0, 16.0, 16.0],
                     match object.kind {
+                        valorant_horizon_engine::gameplay::objects::ObjectKind::Trapwire
+                        | valorant_horizon_engine::gameplay::objects::ObjectKind::Spycam
+                        | valorant_horizon_engine::gameplay::objects::ObjectKind::CageDevice => {
+                            [70, 210, 220, 255]
+                        }
                         valorant_horizon_engine::gameplay::objects::ObjectKind::Drone
                         | valorant_horizon_engine::gameplay::objects::ObjectKind::ReconBolt => {
                             [60, 170, 240, 255]
@@ -394,6 +424,27 @@ impl Game<'_> {
         }
     }
     pub(super) fn vh_fog(&self, camera: [f64; 3], fog: &mut horizon_client::fog::FogData) {
+        let cage = state().lock().ok().is_some_and(|s| {
+            s.snapshot.as_ref().is_some_and(|s| {
+                s.zones.iter().any(|z| {
+                    matches!(
+                        z.kind,
+                        valorant_horizon_engine::gameplay::zones::ZoneKind::CyberCage
+                    ) && z.touches(valorant_horizon_engine::gameplay::geometry::Box3 {
+                        min: camera.map(|n| n - 0.01),
+                        max: camera.map(|n| n + 0.01),
+                    })
+                })
+            })
+        });
+        if cage {
+            fog.color = [0.35, 0.55, 0.6, 1.];
+            fog.environmental_start = 0.;
+            fog.environmental_end = 0.25;
+            fog.render_distance_start = 0.;
+            fog.render_distance_end = 0.25;
+            return;
+        }
         let vision = state()
             .lock()
             .ok()

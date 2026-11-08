@@ -15,8 +15,11 @@ fn valorant_consume(
             .lock()
             .ok()
             .is_some_and(|s| s.menu || s.rebind.is_some() || s.consumed.as_deref() == Some(name));
-        let recall =
-            name == "key.keyboard.r" && state().lock().ok().is_some_and(|s| s.selected == 8);
+        let recall = name == "key.keyboard.r"
+            && state()
+                .lock()
+                .ok()
+                .is_some_and(|s| s.selected == 8 || s.selected >= 12);
         if binding || ui || recall || name == "key.keyboard.v" || name == "key.keyboard.b" {
             return std::ops::ControlFlow::Break(Ok(()));
         }

@@ -117,6 +117,7 @@ fn maximal_snapshot_fits_native_payload_budget() {
         recon::MAX_BEAMS
     ];
     snapshot.bow_charge = Some(u32::MAX);
+    snapshot.kit = [u32::MAX; 4];
     snapshot.bounces = u8::MAX;
     snapshot.fury_shots = u8::MAX;
     let bytes = serde_json::to_vec(&snapshot).unwrap();

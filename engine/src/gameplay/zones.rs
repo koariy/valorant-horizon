@@ -2,6 +2,7 @@ use super::geometry::*;
 use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum ZoneKind {
+    CyberCage,
     WaterWall,
     Whirlpool,
     Gravity,
@@ -16,6 +17,7 @@ pub enum ZoneKind {
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Zone {
+    #[serde(rename = "o")]
     pub owner: u128,
     pub kind: ZoneKind,
     pub bounds: Box3,

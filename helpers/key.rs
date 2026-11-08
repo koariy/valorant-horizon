@@ -99,6 +99,14 @@ fn valorant_key(game: &mut crate::game::Game<'_>, key: &str, pressed: bool) {
                 s.rebind = Some(i);
                 return;
             }
+            if key == "key.keyboard.left" {
+                s.menu_page = s.menu_page.saturating_sub(1);
+                return;
+            }
+            if key == "key.keyboard.right" {
+                s.menu_page = (s.menu_page + 1).min((s.registry.agents().len() - 1) / 10);
+                return;
+            }
             if key == "key.keyboard.equal" && s.select(11) {
                 action = Some(Action::Select(11));
                 save = Some("sova");
@@ -110,13 +118,19 @@ fn valorant_key(game: &mut crate::game::Game<'_>, key: &str, pressed: bool) {
             if let Some(i) = key
                 .strip_prefix("key.keyboard.")
                 .and_then(|s| s.parse::<usize>().ok())
-                .and_then(|i| if i == 0 { Some(9) } else { i.checked_sub(1) })
+                .and_then(|i| {
+                    if i == 0 {
+                        Some(s.menu_page * 10 + 9)
+                    } else {
+                        i.checked_sub(1).map(|i| i + s.menu_page * 10)
+                    }
+                })
                 && s.select(i)
             {
                 action = Some(Action::Select(i));
                 save = Some(s.registry.agents()[i].id);
             }
-        } else if key == "key.keyboard.r" && s.selected == 8 {
+        } else if key == "key.keyboard.r" && (s.selected == 8 || s.selected >= 12) {
             s.consumed = Some(key.into());
             action = Some(Action::Recall);
         } else if key == "key.keyboard.b" {

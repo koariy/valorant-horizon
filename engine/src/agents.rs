@@ -85,6 +85,7 @@ impl Default for Registry {
                 })
                 .expect("unique builtin agent");
         }
+        crate::advanced::register(&mut registry);
         registry
     }
 }

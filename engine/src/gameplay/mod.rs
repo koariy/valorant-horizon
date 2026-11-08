@@ -163,6 +163,7 @@ pub enum Action {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Snapshot {
     pub agent: usize,
+    pub kit: [u32; 4],
     pub contacts: Vec<recon::Contact>,
     pub beams: Vec<recon::Beam>,
     pub bow_charge: Option<u32>,

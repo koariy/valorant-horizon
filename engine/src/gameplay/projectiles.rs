@@ -23,6 +23,7 @@ pub enum ProjectileKind {
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Projectile {
+    #[serde(rename = "o")]
     pub owner: u128,
     pub kind: ProjectileKind,
     pub position: V3,
@@ -127,9 +128,7 @@ pub fn intercept(
         .enumerate()
         .filter(|(_, o)| o.health > 0. && o.ticks > 0)
         .filter_map(|(i, o)| {
-            o.bounds()
-                .expanded(0.08)
-                .segment(from, to)
+            o.hit(from, to, 0.08)
                 .filter(|t| *t < barrier)
                 .map(|t| (i, t))
         })

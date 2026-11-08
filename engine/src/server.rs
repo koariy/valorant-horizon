@@ -10,6 +10,7 @@ pub const CHANNEL: &str = "valorant_horizon:abilities";
 #[derive(Default)]
 pub struct Player {
     pub agent: usize,
+    pub extra: crate::advanced::Expansion,
     pub sova: crate::agents::sova::Sova,
     pub clove: crate::agents::clove::Clove,
     pub harbor: crate::agents::harbor::Harbor,
@@ -41,7 +42,8 @@ impl Player {
     }
 
     pub fn busy(&self) -> bool {
-        self.sova.busy()
+        self.extra.busy()
+            || self.sova.busy()
             || self.clove.busy()
             || self.harbor.busy()
             || self.astra.busy()
@@ -55,6 +57,7 @@ impl Player {
             || self.reyna.busy()
     }
     pub fn cancel(&mut self) {
+        self.extra.leave();
         self.sova.cancel();
         self.clove.leave();
         self.harbor.cancel();
@@ -72,6 +75,10 @@ impl Player {
 #[derive(Default)]
 pub struct Session {
     pub players: HashMap<u128, Player>,
+    pub corpses: Vec<crate::advanced::Corpse>,
+    pub budget: crate::advanced::Budget,
+    pub extra_kills: Vec<(u128, Entity)>,
+    pub viewers: HashMap<u128, Vec<u128>>,
     pub intel: recon::Intel,
     pub beams: Vec<recon::Beam>,
     pub toxins: Vec<toxin::Field>,
@@ -109,6 +116,11 @@ impl Session {
         }
     }
     pub fn tick(&mut self, w: &mut impl World) {
+        self.budget = Default::default();
+        for corpse in &mut self.corpses {
+            corpse.ticks = corpse.ticks.saturating_sub(1);
+        }
+        self.corpses.retain(|x| x.ticks > 0);
         self.intel.tick(w);
         for b in &mut self.beams {
             b.ticks = b.ticks.saturating_sub(1);
@@ -138,6 +150,16 @@ impl Session {
                         p.clove.fallen(target, *id == owner);
                     }
                 }
+                if self.corpses.len() >= crate::advanced::MAX_CORPSES {
+                    self.corpses.remove(0);
+                }
+                self.corpses.push(crate::advanced::Corpse {
+                    target,
+                    killer: owner,
+                    at,
+                    ticks: 200,
+                    used: false,
+                });
                 self.credit_kill(owner, target);
                 if let Some(p) = self.players.get_mut(&owner) {
                     if p.agent == 5 {
@@ -182,6 +204,28 @@ impl Session {
                     jump: false,
                     eligible: false,
                 };
+                if p.agent >= 12 {
+                    p.extra.tick(
+                        p.agent,
+                        &offline,
+                        &mut crate::advanced::Context {
+                            world: w,
+                            actors: &actors,
+                            objects: &mut self.objects,
+                            next: &mut self.next_object,
+                            projectiles: &mut self.projectiles,
+                            zones: &mut self.zones,
+                            smokes: &mut self.smokes,
+                            intel: &mut self.intel,
+                            beams: &mut self.beams,
+                            bursts: &mut self.bursts,
+                            vision: &mut self.vision,
+                            corpses: &mut self.corpses,
+                            kills: &mut self.extra_kills,
+                            budget: &mut self.budget,
+                        },
+                    );
+                }
                 p.sova.offline();
                 p.clove.offline();
                 p.viper.tick(&offline, 0);
@@ -280,13 +324,14 @@ impl Session {
                 continue;
             }
             let okay = match r.action {
-                Action::Select(index) if index <= 11 => {
+                Action::Select(index) if index < 12 + crate::advanced::COUNT => {
                     if p.agent == index {
                         true
                     } else if p.busy() {
                         false
                     } else {
                         p.agent = index;
+                        p.extra = Default::default();
                         p.sova = Default::default();
                         p.clove = Default::default();
                         p.harbor = Default::default();
@@ -304,7 +349,29 @@ impl Session {
                 }
                 Action::Select(_) => false,
                 Action::Activate(slot) => {
-                    if p.agent == 11 {
+                    if p.agent >= 12 {
+                        p.extra.activate(
+                            p.agent,
+                            slot,
+                            a,
+                            &mut crate::advanced::Context {
+                                world: w,
+                                actors: &actors,
+                                objects: &mut self.objects,
+                                next: &mut self.next_object,
+                                projectiles: &mut self.projectiles,
+                                zones: &mut self.zones,
+                                smokes: &mut self.smokes,
+                                intel: &mut self.intel,
+                                beams: &mut self.beams,
+                                bursts: &mut self.bursts,
+                                vision: &mut self.vision,
+                                corpses: &mut self.corpses,
+                                kills: &mut self.extra_kills,
+                                budget: &mut self.budget,
+                            },
+                        )
+                    } else if p.agent == 11 {
                         p.sova.activate(slot, a)
                     } else if p.agent == 10 {
                         p.clove.activate(slot, a, w)
@@ -361,6 +428,26 @@ impl Session {
                     p.jett.guiding = false;
                     true
                 }
+                Action::Release(4) if p.agent >= 12 => p.extra.release(
+                    p.agent,
+                    a,
+                    &mut crate::advanced::Context {
+                        world: w,
+                        actors: &actors,
+                        objects: &mut self.objects,
+                        next: &mut self.next_object,
+                        projectiles: &mut self.projectiles,
+                        zones: &mut self.zones,
+                        smokes: &mut self.smokes,
+                        intel: &mut self.intel,
+                        beams: &mut self.beams,
+                        bursts: &mut self.bursts,
+                        vision: &mut self.vision,
+                        corpses: &mut self.corpses,
+                        kills: &mut self.extra_kills,
+                        budget: &mut self.budget,
+                    },
+                ),
                 Action::Release(4) if p.agent == 11 => p.sova.release(
                     a,
                     &mut crate::agents::sova::Context {
@@ -381,7 +468,8 @@ impl Session {
                 Action::Release(_) => true,
                 Action::Fire(_) if p.omen.cast.is_some() => false,
                 Action::Fire(alt)
-                    if (p.agent == 0 && p.jett.slots[3].active == 0)
+                    if (p.agent >= 12 && !p.extra.equipped(p.agent))
+                        || (p.agent == 0 && p.jett.slots[3].active == 0)
                         || (p.agent == 1 && p.sage.equipped.is_none())
                         || (p.agent == 2 && p.phoenix.equipped.is_none())
                         || (p.agent == 3 && p.omen.equipped.is_none())
@@ -406,7 +494,29 @@ impl Session {
                     }
                 }
                 Action::Fire(alt) => {
-                    if p.agent == 11 {
+                    if p.agent >= 12 {
+                        p.extra.fire(
+                            p.agent,
+                            alt,
+                            a,
+                            &mut crate::advanced::Context {
+                                world: w,
+                                actors: &actors,
+                                objects: &mut self.objects,
+                                next: &mut self.next_object,
+                                projectiles: &mut self.projectiles,
+                                zones: &mut self.zones,
+                                smokes: &mut self.smokes,
+                                intel: &mut self.intel,
+                                beams: &mut self.beams,
+                                bursts: &mut self.bursts,
+                                vision: &mut self.vision,
+                                corpses: &mut self.corpses,
+                                kills: &mut self.extra_kills,
+                                budget: &mut self.budget,
+                            },
+                        )
+                    } else if p.agent == 11 {
                         p.sova.fire(
                             alt,
                             a,
@@ -502,8 +612,29 @@ impl Session {
                     }
                 }
                 Action::Aim(x, z) => p.agent == 10 && p.clove.nudge(x, z, a),
+                Action::Recall if p.agent >= 12 => p.extra.recall(
+                    p.agent,
+                    a,
+                    &mut crate::advanced::Context {
+                        world: w,
+                        actors: &actors,
+                        objects: &mut self.objects,
+                        next: &mut self.next_object,
+                        projectiles: &mut self.projectiles,
+                        zones: &mut self.zones,
+                        smokes: &mut self.smokes,
+                        intel: &mut self.intel,
+                        beams: &mut self.beams,
+                        bursts: &mut self.bursts,
+                        vision: &mut self.vision,
+                        corpses: &mut self.corpses,
+                        kills: &mut self.extra_kills,
+                        budget: &mut self.budget,
+                    },
+                ),
                 Action::Recall => p.agent == 8 && p.astra.dissipate(a, &mut self.smokes),
                 Action::Cancel => {
+                    p.extra.cancel();
                     p.sova.cancel();
                     p.clove.cancel();
                     p.harbor.cancel();
@@ -527,7 +658,7 @@ impl Session {
                     "Resurrection unavailable: Minecraft respawn/inventory integration required"
                         .into()
                 } else {
-                    "Ability unavailable, obstructed, or agent not implemented".into()
+                    "Ability unavailable, obstructed, or resource limit reached".into()
                 }
             });
         }
@@ -558,7 +689,28 @@ impl Session {
                 && let Some(p) = self.players.get_mut(&id)
             {
                 p.strike_delay = p.strike_delay.saturating_sub(1);
-                if p.agent == 11 {
+                if p.agent >= 12 {
+                    p.extra.tick(
+                        p.agent,
+                        a,
+                        &mut crate::advanced::Context {
+                            world: w,
+                            actors: &actors,
+                            objects: &mut self.objects,
+                            next: &mut self.next_object,
+                            projectiles: &mut self.projectiles,
+                            zones: &mut self.zones,
+                            smokes: &mut self.smokes,
+                            intel: &mut self.intel,
+                            beams: &mut self.beams,
+                            bursts: &mut self.bursts,
+                            vision: &mut self.vision,
+                            corpses: &mut self.corpses,
+                            kills: &mut self.extra_kills,
+                            budget: &mut self.budget,
+                        },
+                    );
+                } else if p.agent == 11 {
                     for target in p.sova.tick(
                         a,
                         &mut crate::agents::sova::Context {
@@ -701,6 +853,11 @@ impl Session {
         self.objects.retain(|o| {
             o.ticks > 0
                 && o.health > 0.0
+                && (!o.kind.is_advanced()
+                    || self
+                        .players
+                        .get(&o.owner)
+                        .is_some_and(|p| p.extra.owns(p.agent, o.id)))
                 && (!matches!(o.kind, objects::ObjectKind::Drone)
                     || self.players.get(&o.owner).is_some_and(|p| {
                         p.agent == 11 && p.sova.view.is_some() && p.sova.drone == Some(o.id)
@@ -712,8 +869,10 @@ impl Session {
                         .is_some_and(|p| p.omen.shade == Some(o.id)))
         });
         for (id, p) in &self.players {
-            self.vision.entry(*id).or_default().phased =
-                p.omen.cast.is_some() || p.reyna.phase > 0 || p.astra.view.is_some();
+            self.vision.entry(*id).or_default().phased = p.omen.cast.is_some()
+                || p.reyna.phase > 0
+                || p.astra.view.is_some()
+                || p.extra.phased(p.agent);
         }
         let actors = w.actors();
         for smoke in &mut self.smokes {
@@ -731,6 +890,9 @@ impl Session {
         let mut zone_kills = Vec::new();
         for zone in &mut self.zones {
             zone.ticks = zone.ticks.saturating_sub(1);
+            if matches!(zone.kind, zones::ZoneKind::CyberCage) {
+                continue;
+            }
             if matches!(
                 zone.kind,
                 zones::ZoneKind::WaterWall | zones::ZoneKind::Whirlpool
@@ -1316,6 +1478,14 @@ impl Session {
             }
         }
 
+        for (owner, target) in std::mem::take(&mut self.extra_kills) {
+            self.defer_kill(w, owner, target, false);
+        }
+        self.viewers = self
+            .players
+            .keys()
+            .map(|id| (*id, w.intel_viewers(*id)))
+            .collect();
         if self.decay_loaded {
             w.save_decay(
                 &self
@@ -1387,7 +1557,9 @@ impl Session {
     }
     pub fn snapshot(&self, id: u128) -> Option<Snapshot> {
         let p = self.players.get(&id)?;
-        let slots = if p.agent == 11 {
+        let slots = if p.agent >= 12 {
+            p.extra.slots(p.agent)
+        } else if p.agent == 11 {
             p.sova.slots
         } else if p.agent == 10 {
             p.clove.slots
@@ -1414,6 +1586,7 @@ impl Session {
         };
         Some(Snapshot {
             agent: p.agent,
+            kit: p.extra.stats(p.agent),
             contacts: self.intel.snapshot(id),
             beams: self.beams.clone(),
             bow_charge: p.sova.charging,
@@ -1422,7 +1595,9 @@ impl Session {
             clove_marks: p.clove.marks.len() as u8,
             after_death: p.agent == 10 && p.clove.death.is_some(),
             sequence: p.sequence,
-            equipped: if p.agent == 11 {
+            equipped: if p.agent >= 12 {
+                p.extra.equipped(p.agent)
+            } else if p.agent == 11 {
                 p.sova.equipped.is_some() || p.sova.view.is_some()
             } else if p.agent == 10 {
                 p.clove.equipped.is_some()
@@ -1451,12 +1626,12 @@ impl Session {
             cooldowns: slots.map(|s| s.remaining),
             active: slots.map(|s| s.active),
             knives: if p.agent == 0 { p.jett.knives } else { 0 },
-            camera: p
+            camera: p.extra.camera(p.agent).or(p
                 .sova
                 .view
                 .as_ref()
                 .or(p.astra.view.as_ref())
-                .map(|v| v.position),
+                .map(|v| v.position)),
             stars: self
                 .players
                 .values()
@@ -1475,6 +1650,14 @@ impl Session {
             objects: self
                 .objects
                 .iter()
+                .filter(|o| {
+                    !matches!(o.kind, objects::ObjectKind::Trapwire)
+                        || o.owner == id
+                        || self.viewers.get(&o.owner).is_some_and(|v| v.contains(&id))
+                        || self.positions.get(&Entity::Player(id)).is_some_and(|p| {
+                            distance(*p, scale(add(o.position, o.velocity), 0.5)) <= 3.
+                        })
+                })
                 .cloned()
                 .chain(
                     p.reyna
