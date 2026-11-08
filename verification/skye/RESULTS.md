@@ -1,0 +1,11 @@
+# Skye — 2026-11-08, 0.4.0-dev.9
+
+PASS: fmt, Clippy all-targets -D warnings, 301 Rust tests (22 Skye), release engine build and bridge/helper/native-state rustfmt. PASS: final mixins apply, native cargo check --locked --lib --no-default-features and full cargo build --locked --bin horizon-client --no-default-features. Native binary hash, archive/source/stage integrity and bundle validator included.
+
+Tests cover actual ally HP and shared pool expenditure, no-self/no-enemy/no-full/dead/downed/occluded/range healing, refused healing and delayed recovery; camera vs real vulnerable body, ground movement and swept pounce/direct HP/concuss, wall/unknown/TTL/HP destruction/damage/cancel; hawk hold/release/manual/automatic flash, destruction/unknown cleanup, independent healing input and private hit confirmation; three distinct nearest Seekers, nearsight, mob physical fallback, phase/destruction/TTL, atomic resource refusal, death/suppression and registry/HUD. Undefined RMB hold modes are rejected rather than leaving a channel active without a matching release.
+
+Shared companions.rs adds budgeted contact ordering and nearest target selection. World::heal now returns actual player HP increase from the native for_player closure instead of treating an executed callback as a successful heal; the living_heal guard can legitimately refuse it. All prior kits regressions pass. Initial parallel native/test compilation exhausted the small execution disk; generated caches were cleaned and the final engine checks and native build ran sequentially to completion. No source test failure is hidden by that retry.
+
+Official Skye descriptions rechecked; patch8.01 corroborates auto-flash. Ordinary-world pool/charge regeneration is an explicit survival adaptation. Player vision effects are real fog/blindness; vanilla mob AI perception is not changed, with declared physical slow/weakness fallback for Seeker nearsight. Local walking is not a global labyrinth pathfinder. See docs/SKYE.md.
+
+Horizon client0.1.0/Minecraft26.3 commit41f822b659789780f58d32c63ddfb6887ea1b8bf; mixins0.6.0 commit5a64af938ec86b00d53d16a408aabc0038fb3e57; Rust1.99.1/Linux x86_64. No Minecraft world/LAN/render/audio acceptance. Next: Gekko.

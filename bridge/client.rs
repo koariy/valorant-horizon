@@ -220,6 +220,80 @@ impl Game<'_> {
                 projectiles::beam,
                 smoke::orb,
             };
+            if matches!(object.kind, K::SkyeTiger | K::SkyeHawk | K::SkyeSeeker) {
+                if matches!(object.kind, K::SkyeTiger) {
+                    let dir =
+                        valorant_horizon_engine::gameplay::geometry::horizontal(object.velocity);
+                    let dir = if dir == [0.; 3] { [0., 0., 1.] } else { dir };
+                    let right = [dir[2], 0., -dir[0]];
+                    for (lo, hi) in [
+                        ([-0.24, 0., -0.3], [0.24, 0.32, 0.3]),
+                        ([-0.2, 0.2, 0.15], [0.2, 0.5, 0.4]),
+                    ] {
+                        let b =
+                            valorant_horizon_engine::gameplay::geometry::Box3 { min: lo, max: hi };
+                        for q in valorant_horizon_engine::gameplay::zones::box_quads(b, [0.; 3]) {
+                            let q = q.map(|v| {
+                                sub(
+                                    add(
+                                        object.position,
+                                        add(
+                                            scale(right, f64::from(v[0])),
+                                            add(
+                                                [0., f64::from(v[1]), 0.],
+                                                scale(dir, f64::from(v[2])),
+                                            ),
+                                        ),
+                                    ),
+                                    draw.camera,
+                                )
+                                .map(|n| n as f32)
+                            });
+                            self.native_world_quad(
+                                draw,
+                                "horizon/white",
+                                q,
+                                [0., 0., 16., 16.],
+                                [100, 185, 75, 240],
+                            );
+                        }
+                    }
+                } else if matches!(object.kind, K::SkyeHawk) {
+                    let p = sub(object.position, draw.camera);
+                    let dir =
+                        valorant_horizon_engine::gameplay::geometry::horizontal(object.velocity);
+                    let side = [dir[2], 0., -dir[0]];
+                    for q in beam(add(p, scale(side, -0.45)), add(p, scale(side, 0.45)), 0.07) {
+                        self.native_world_quad(
+                            draw,
+                            "horizon/white",
+                            q,
+                            [0., 0., 16., 16.],
+                            [155, 220, 95, 240],
+                        );
+                    }
+                    for q in orb(p, 0.16) {
+                        self.native_world_quad(
+                            draw,
+                            "horizon/white",
+                            q,
+                            [0., 0., 16., 16.],
+                            [245, 215, 120, 245],
+                        );
+                    }
+                } else {
+                    for q in orb(sub(add(object.position, [0., 0.25, 0.]), draw.camera), 0.3) {
+                        self.native_world_quad(
+                            draw,
+                            "horizon/white",
+                            q,
+                            [0., 0., 16., 16.],
+                            [150, 215, 65, 225],
+                        );
+                    }
+                }
+                continue;
+            }
             if matches!(object.kind, K::SeismicFront | K::WallCharge) {
                 if matches!(object.kind, K::SeismicFront) {
                     for q in beam(
@@ -522,6 +596,8 @@ impl Game<'_> {
                     quad,
                     [0.0, 0.0, 16.0, 16.0],
                     match object.kind {
+                        valorant_horizon_engine::gameplay::objects::ObjectKind::SkyeTiger | valorant_horizon_engine::gameplay::objects::ObjectKind::SkyeHawk | valorant_horizon_engine::gameplay::objects::ObjectKind::SkyeSeeker => [150,215,65,225],
+
                         valorant_horizon_engine::gameplay::objects::ObjectKind::SeismicFront | valorant_horizon_engine::gameplay::objects::ObjectKind::WallCharge => [255,145,45,220],
 
                         valorant_horizon_engine::gameplay::objects::ObjectKind::Fragment |

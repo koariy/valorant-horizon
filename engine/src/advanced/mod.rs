@@ -1,10 +1,12 @@
 //! Additional kits share the existing authoritative World and resource pools.
 pub mod breach;
+pub mod companions;
 pub mod cypher;
 pub mod fade;
 pub mod iso;
 pub mod kayo;
 pub mod neon;
+pub mod skye;
 pub mod throwable;
 mod trace;
 pub mod walking;
@@ -222,6 +224,20 @@ impl<W: World> Context<'_, W> {
             }
         }
         false
+    }
+    pub fn nearsight(&mut self, target: Entity, ticks: u32) {
+        if self.world.status_immune(target) {
+            return;
+        }
+        if self.world.effect(target, "minecraft:blindness", ticks, 0) {
+            if let Entity::Player(id) = target {
+                let v = self.vision.entry(id).or_default();
+                v.nearsight = v.nearsight.max(ticks);
+            } else {
+                self.world.effect(target, "minecraft:slowness", ticks, 1);
+                self.world.effect(target, "minecraft:weakness", ticks, 0);
+            }
+        }
     }
     pub fn hinder(&mut self, target: Entity, ticks: u32) {
         if self.world.status_immune(target) {
@@ -474,4 +490,5 @@ kits!(
     (17, waylay, "Waylay", waylay::Waylay),
     (18, kayo, "KAY/O", kayo::Kayo),
     (19, breach, "Breach", breach::Breach),
+    (20, skye, "Skye", skye::Skye),
 );

@@ -2,6 +2,9 @@ use super::{geometry::*, *};
 use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum ObjectKind {
+    SkyeTiger,
+    SkyeHawk,
+    SkyeSeeker,
     SeismicFront,
     WallCharge,
     Fragment,
@@ -91,7 +94,10 @@ impl ObjectKind {
     pub fn is_advanced(self) -> bool {
         matches!(
             self,
-            Self::SeismicFront
+            Self::SkyeTiger
+                | Self::SkyeHawk
+                | Self::SkyeSeeker
+                | Self::SeismicFront
                 | Self::WallCharge
                 | Self::Fragment
                 | Self::FlashDrive
@@ -235,7 +241,10 @@ impl Object {
             | ObjectKind::Trapwire
             | ObjectKind::Spycam
             | ObjectKind::CageDevice => (0.12, 0.25),
-            ObjectKind::HauntOrb
+            ObjectKind::SkyeTiger
+            | ObjectKind::SkyeHawk
+            | ObjectKind::SkyeSeeker
+            | ObjectKind::HauntOrb
             | ObjectKind::SeizeOrb
             | ObjectKind::Haunt
             | ObjectKind::Prowler => (0.25, 0.5),

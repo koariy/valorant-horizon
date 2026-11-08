@@ -416,7 +416,11 @@ fn enemies_remote_and_stale_requests_cannot_stabilize() {
 }
 #[test]
 fn all_existing_agents_reject_suppressed_activations_and_keep_placed_utilities() {
-    for agent in 0..19 {
+    for agent in 0..valorant_horizon_engine::State::default()
+        .registry
+        .agents()
+        .len()
+    {
         let mut w = TestWorld::default();
         let mut s = Session::default();
         s.players.insert(

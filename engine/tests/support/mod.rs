@@ -31,6 +31,7 @@ pub struct TestWorld {
     pub ledger: Vec<barrier::OwnedBlock>,
     pub decay: Vec<(Entity, toxin::Decay)>,
     pub protected: Vec<Entity>,
+    pub heal_denied: Vec<Entity>,
     pub shield: f32,
     pub time: i64,
 
@@ -53,6 +54,7 @@ impl Default for TestWorld {
             ledger: vec![],
             decay: vec![],
             protected: vec![],
+            heal_denied: vec![],
             shield: 0.,
             time: 0,
             actors: vec![actor(1, [0.0, 1.0, 0.0]), actor(2, [1.0, 1.0, 1.0])],
@@ -202,6 +204,9 @@ impl World for TestWorld {
         }
     }
     fn heal(&mut self, t: Entity, d: f32) -> bool {
+        if self.heal_denied.contains(&t) {
+            return false;
+        }
         if let Entity::Player(id) = t
             && self.protection_state(id).downed
         {

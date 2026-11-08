@@ -5,3 +5,7 @@ work/
 __pycache__/
 .env
 .env.*
+spatial/target/
+spatial/Cargo.lock
+native-state/target/
+native-state/Cargo.lock

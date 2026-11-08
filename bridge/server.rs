@@ -535,9 +535,13 @@ impl World for Bridge<'_, '_> {
                 };
                 self.0
                     .for_player(t, |g| {
-                        g.apply_effect_action(horizon_client::effects::EffectAction::Heal(amount))
+                        let before = g.player.as_ref().map_or(0., |p| p.health.health());
+                        g.apply_effect_action(horizon_client::effects::EffectAction::Heal(amount));
+                        g.player
+                            .as_ref()
+                            .is_some_and(|p| p.health.health() > before)
                     })
-                    .is_some()
+                    .unwrap_or(false)
             }
             Entity::Mob(id) => {
                 let dim = self.0.dim.id();

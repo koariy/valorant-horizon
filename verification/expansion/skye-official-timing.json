@@ -1,0 +1,10 @@
+{
+  "url": "https://playvalorant.com/en-us/news/game-updates/valorant-patch-notes-8-01/",
+  "date": "2026-11-08",
+  "html_sha256": "c436710b59e42b6a5644a5faa90d9fc1c146f63995615550fa4ccca60505fd08",
+  "facts": [
+    "Guiding Light no longer regenerates charges during a round.",
+    "Guiding Light now automatically activates the flash at the end of its lifetime."
+  ],
+  "scope": "Official historical patch corroborates auto flash; ordinary-world renewable cooldown and Minecraft timing are explicit adaptations."
+}

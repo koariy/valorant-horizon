@@ -181,6 +181,15 @@ impl State {
                     snapshot.stabilizing
                 ));
             }
+            if self.selected == 20 {
+                lines.push(format!(
+                    "Regrowth: {:.2} HP | tiger: {} | flash confirm: {} | Seekers: {}",
+                    snapshot.kit[0] as f32 * 0.25,
+                    snapshot.kit[1],
+                    snapshot.kit[2],
+                    snapshot.kit[3]
+                ));
+            }
             if self.selected == 19 {
                 lines.push(format!(
                     "Fault charge: {} | wall charges: {} | quakes: {} | hits: {}",
