@@ -140,6 +140,12 @@ pub trait World {
     fn effect(&mut self, _target: Entity, _name: &str, _ticks: u32, _amplifier: u8) -> bool {
         false
     }
+    fn status_immune(&self, _target: Entity) -> bool {
+        false
+    }
+    fn quiet_effect(&mut self, target: Entity, name: &str, ticks: u32, amplifier: u8) -> bool {
+        self.effect(target, name, ticks, amplifier)
+    }
     fn protect(&mut self, _owner: u128, _state: effects::Protection) {}
     fn return_requested(&self, _owner: u128) -> bool {
         false
@@ -171,6 +177,8 @@ pub enum Action {
 pub struct Snapshot {
     pub agent: usize,
     pub kit: [u32; 4],
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub hidden_entities: Vec<u32>,
     pub contacts: Vec<recon::Contact>,
     pub beams: Vec<recon::Beam>,
     pub trails: Vec<recon::Beam>,

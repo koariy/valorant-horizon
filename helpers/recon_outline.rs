@@ -3,6 +3,18 @@ fn recon_outline(entity_id: u32, outline: &mut Option<u32>) {
         .lock()
         .ok()
         .is_some_and(|s| {
+            s.snapshot
+                .as_ref()
+                .is_some_and(|s| s.hidden_entities.contains(&entity_id))
+        })
+    {
+        *outline = None;
+        return;
+    }
+    if valorant_horizon_engine::state()
+        .lock()
+        .ok()
+        .is_some_and(|s| {
             s.snapshot.as_ref().is_some_and(|s| {
                 s.contacts
                     .iter()

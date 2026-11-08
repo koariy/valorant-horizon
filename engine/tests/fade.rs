@@ -366,6 +366,7 @@ fn capacity_or_unknown_spawn_does_not_consume_charge() {
     c.w.unloaded_z = None;
     for i in 0..MAX_OBJECTS {
         c.objects.push(Object {
+            last_hit: None,
             id: i as u64,
             owner: 1,
             kind: ObjectKind::Haunt,

@@ -22,6 +22,7 @@ fn maximal_snapshot_fits_native_payload_budget() {
     s.players.insert(u128::MAX, p);
     s.objects = vec![
         Object {
+            last_hit: None,
             id: u64::MAX,
             owner: u128::MAX,
             kind: ObjectKind::ReconBolt,
@@ -120,6 +121,7 @@ fn maximal_snapshot_fits_native_payload_budget() {
     snapshot.vision.deafen = u32::MAX;
     snapshot.bow_charge = Some(u32::MAX);
     snapshot.kit = [u32::MAX; 4];
+    snapshot.hidden_entities = vec![u32::MAX; 64];
     snapshot.bounces = u8::MAX;
     snapshot.fury_shots = u8::MAX;
     let bytes = serde_json::to_vec(&snapshot).unwrap();

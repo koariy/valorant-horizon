@@ -1,6 +1,6 @@
 [mod]
 id = "valorant_horizon"
-version = "0.4.0-dev.3"
+version = "0.4.0-dev.4"
 
 [compatibility]
 horizon_revision = "41f822b659789780f58d32c63ddfb6887ea1b8bf"
@@ -325,3 +325,42 @@ bindings=[
  {name="entity_id",ty="u32",value="entity_id"},
  {name="outline",ty="&mut Option<u32>",value="outline"},
 ]
+
+[[injection]]
+id="phase_entity_hide"
+target="horizon_client::game::remote_camera::Game<'_>::hides_as_camera"
+kind="RETURN"
+helper="helpers/phase_hide.rs"
+bindings=[{name="value",ty="bool",value="$value"},{name="id",ty="u32",value="id"}]
+
+[[injection]]
+id="phase_name"
+target="horizon_client::game::native_hooks::Game<'_>::native_render_name_tag"
+kind="HEAD"
+helper="helpers/phase_name.rs"
+bindings=[{name="entity_id",ty="u32",value="entity_id"},{name="visible",ty="&mut bool",value="visible"}]
+
+[[injection]]
+id="phase_hears"
+target="horizon_client::game::native_hooks::Game<'_>::native_hears_projectile_impacts"
+kind="HEAD"
+helper="helpers/phase_hears.rs"
+bindings=[{name="hears",ty="&mut bool",value="hears"}]
+
+[[injection]]
+id="phase_impact"
+target="horizon_client::game::native_hooks::Game<'_>::native_projectile_impact"
+kind="HEAD"
+helper="helpers/phase_impact.rs"
+bindings=[{name="entity",ty="Option<u32>",value="entity"},{name="canceled",ty="&mut bool",value="canceled"}]
+
+[[injection]]
+id="phase_names_enable"
+target="horizon_client::game::names::Game<'_>::name_tags"
+kind="MODIFY_ARG"
+selector="self.name_tags_with_hooks"
+require=1
+ordinal=0
+argument=2
+helper="helpers/phase_names_enable.rs"
+bindings=[{name="value",ty="bool",value="$value"}]

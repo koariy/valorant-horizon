@@ -130,6 +130,7 @@ fn nearest_utility_and_cove_take_damage_before_target() {
     let (mut k, mut c) = (Neon::default(), Scene::default());
     c.w.actors[1] = actor(2, [0., 1., 6.]);
     c.objects.push(Object {
+        last_hit: None,
         id: 101,
         owner: 2,
         kind: ObjectKind::Haunt,
@@ -209,6 +210,7 @@ fn relay_bolt_is_instant_bounces_once_and_creates_two_delayed_concussions() {
 #[test]
 fn relay_grenade_is_not_an_artificial_shootable_target() {
     let o = Object {
+        last_hit: None,
         id: 1,
         owner: 1,
         kind: ObjectKind::RelayBolt,

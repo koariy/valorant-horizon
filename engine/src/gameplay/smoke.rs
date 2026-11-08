@@ -2,11 +2,15 @@ use super::geometry::{V3, distance};
 use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Smoke {
+    #[serde(rename = "p", alias = "center")]
     pub center: V3,
+    #[serde(rename = "r", alias = "radius")]
     pub radius: f64,
+    #[serde(rename = "t", alias = "ticks")]
     pub ticks: u32,
     #[serde(rename = "o")]
     pub owner: u128,
+    #[serde(rename = "c", alias = "color")]
     pub color: [u8; 4],
 }
 impl Smoke {

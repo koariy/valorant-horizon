@@ -60,6 +60,7 @@ fn destroyed_wire_never_triggers() {
 #[test]
 fn wire_capsule_does_not_block_empty_diagonal_box() {
     let o = Object {
+        last_hit: None,
         id: 1,
         owner: 1,
         kind: ObjectKind::Trapwire,

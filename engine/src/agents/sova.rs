@@ -201,6 +201,7 @@ impl Sova {
             self.drone = Some(*c.next);
             self.life = self.settings.drone_ticks.clamp(1, 300);
             c.objects.push(Object {
+                last_hit: None,
                 id: *c.next,
                 owner,
                 kind: ObjectKind::Drone,
@@ -381,9 +382,9 @@ impl Sova {
                     for o in c
                         .objects
                         .iter_mut()
-                        .filter(|o| o.bounds().segment(from, to).is_some())
+                        .filter(|o| o.hit(from, to, 0.8).is_some())
                     {
-                        o.health = (o.health - self.settings.fury_damage).max(0.);
+                        o.damage(self.settings.fury_damage, Some(Entity::Player(owner)), from);
                     }
                     if c.beams.len() >= recon::MAX_BEAMS {
                         c.beams.remove(0);
@@ -443,6 +444,7 @@ pub fn arrow(p: &mut Projectile, c: &mut Context<'_, impl World>) -> bool {
             if c.objects.len() < MAX_OBJECTS {
                 *c.next = c.next.saturating_add(1);
                 c.objects.push(Object {
+                    last_hit: None,
                     id: *c.next,
                     owner: p.owner,
                     kind: ObjectKind::ReconBolt,

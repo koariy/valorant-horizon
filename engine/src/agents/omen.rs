@@ -162,6 +162,7 @@ impl Omen {
             *next = next.saturating_add(1);
             self.shade = Some(*next);
             objects.push(Object {
+                last_hit: None,
                 id: *next,
                 owner,
                 kind: ObjectKind::Shade,

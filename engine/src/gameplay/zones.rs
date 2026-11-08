@@ -24,6 +24,7 @@ pub struct Zone {
     #[serde(rename = "o")]
     pub owner: u128,
     pub kind: ZoneKind,
+    #[serde(rename = "b", alias = "bounds")]
     pub bounds: Box3,
     #[serde(rename = "t", alias = "ticks")]
     pub ticks: u32,

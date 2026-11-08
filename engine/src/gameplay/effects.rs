@@ -50,3 +50,15 @@ pub fn vulnerability_ids() -> &'static Mutex<HashMap<super::Entity, i32>> {
     static I: OnceLock<Mutex<HashMap<super::Entity, i32>>> = OnceLock::new();
     I.get_or_init(Default::default)
 }
+
+/// Negative statuses used by shared abilities; phase is not a generic buff purge.
+pub fn hostile_status(name: &str) -> bool {
+    matches!(
+        name,
+        "minecraft:blindness"
+            | "minecraft:slowness"
+            | "minecraft:weakness"
+            | "minecraft:poison"
+            | "minecraft:wither"
+    )
+}

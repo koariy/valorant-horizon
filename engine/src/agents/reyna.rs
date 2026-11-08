@@ -164,6 +164,7 @@ impl Reyna {
         }
         *next = next.saturating_add(1);
         objects.push(Object {
+            last_hit: None,
             id: *next,
             owner,
             kind: ObjectKind::Leer,

@@ -1,0 +1,12 @@
+   Compiling horizon-world v0.1.0 (/workspace/work/staged/crates/horizon-world)
+   Compiling horizon-client-render v0.1.0 (/workspace/work/staged/crates/horizon-client-render)
+   Compiling horizon-client v0.1.0 (/workspace/work/staged/crates/horizon-client)
+    Checking horizon-client-core v0.1.0 (/workspace/work/staged/crates/horizon-client-core)
+    Checking horizon-protocol v0.1.0 (/workspace/work/staged/crates/horizon-protocol)
+    Checking horizon-command v0.1.0 (/workspace/work/staged/crates/horizon-command)
+    Checking horizon-items v0.1.0 (/workspace/work/staged/crates/horizon-items)
+    Checking horizon-client-input v0.1.0 (/workspace/work/staged/crates/horizon-client-input)
+    Checking horizon-server-files v0.1.0 (/workspace/work/staged/crates/horizon-server-files)
+    Checking valorant-horizon-engine v0.4.0-dev.4 (/workspace/work/staged/native-crates/valorant_horizon/engine)
+    Checking horizon-client-lib v0.1.0 (/workspace/work/staged/crates/horizon-client-lib)
+    Finished `dev` profile [unoptimized] target(s) in 1m 14s

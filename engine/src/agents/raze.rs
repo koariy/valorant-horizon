@@ -139,6 +139,7 @@ impl Raze {
             }
             let position = add(a.position, scale(horizontal(a.direction), 0.8));
             let temp = Object {
+                last_hit: None,
                 id: 0,
                 owner,
                 kind: ObjectKind::BoomBot,
@@ -156,6 +157,7 @@ impl Raze {
             }
             *c.next = c.next.saturating_add(1);
             c.objects.push(Object {
+                last_hit: None,
                 id: *c.next,
                 ..temp
             });

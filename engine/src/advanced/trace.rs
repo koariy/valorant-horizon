@@ -34,6 +34,7 @@ impl<W: World> Context<'_, W> {
             }
             self.budget.actors -= 1;
             if a.eligible
+                && !self.world.status_immune(a.entity)
                 && a.health > 0.
                 && a.entity != Entity::Player(owner)
                 && let Some(t) = a.bounds.segment(from, to)
@@ -47,7 +48,14 @@ impl<W: World> Context<'_, W> {
             projectiles::utility_hit(self.shields, self.divides, self.objects, from, to, boundary)
         {
             boundary = hit.time;
-            projectiles::apply_utility(hit.hit, self.shields, self.objects, damage);
+            projectiles::apply_utility(
+                hit.hit,
+                self.shields,
+                self.objects,
+                damage,
+                Some(Entity::Player(owner)),
+                from,
+            );
         } else if let Some(target) = target
             && self.world.recon_target(owner, target)
         {

@@ -3,6 +3,8 @@ pub mod cypher;
 pub mod fade;
 pub mod neon;
 mod trace;
+pub mod walking;
+pub mod yoru;
 use crate::{
     abilities::{Ability, Runtime},
     gameplay::{
@@ -157,6 +159,7 @@ impl<W: World> Context<'_, W> {
         *self.next = self.next.saturating_add(1);
         let id = *self.next;
         self.objects.push(Object {
+            last_hit: None,
             id,
             owner,
             kind,
@@ -186,19 +189,56 @@ impl<W: World> Context<'_, W> {
         self.world.effect(target, "minecraft:weakness", ticks, 1);
     }
     pub fn flash(&mut self, at: V3, range: f64, ticks: u32) {
+        self.flash_cone(at, [0.; 3], -1., range, ticks);
+    }
+    pub fn flash_cone(&mut self, at: V3, direction: V3, cone: f64, range: f64, ticks: u32) {
+        self.flash_policy(None, at, direction, cone, range, ticks);
+    }
+    pub fn enemy_flash_cone(
+        &mut self,
+        owner: u128,
+        at: V3,
+        direction: V3,
+        cone: f64,
+        range: f64,
+        ticks: u32,
+    ) {
+        self.flash_policy(Some(owner), at, direction, cone, range, ticks);
+    }
+    fn flash_policy(
+        &mut self,
+        owner: Option<u128>,
+        at: V3,
+        direction: V3,
+        cone: f64,
+        range: f64,
+        ticks: u32,
+    ) {
+        let allies = owner.map(|id| (id, self.world.intel_viewers(id)));
         let targets: Vec<_> = self
             .actors
             .iter()
-            .filter(|a| a.eligible && distance(a.eye(), at) <= range)
+            .filter(|a| {
+                a.eligible
+                    && !allies.as_ref().is_some_and(|(id, list)| {
+                        a.entity == Entity::Player(*id)
+                            || matches!(a.entity,Entity::Player(p) if list.contains(&p))
+                    })
+                    && !self.world.status_immune(a.entity)
+                    && distance(a.eye(), at) <= range
+                    && dot(unit(sub(a.eye(), at)), direction) >= cone
+            })
             .take(32)
             .cloned()
             .collect();
         for a in targets {
-            if dot(a.direction, unit(sub(at, a.eye()))) > 0.15 && self.visible(at, a.eye()) {
-                if let Entity::Player(id) = a.entity {
-                    self.vision.entry(id).or_default().flash = ticks;
-                }
-                self.world.effect(a.entity, "minecraft:blindness", ticks, 0);
+            if dot(a.direction, unit(sub(at, a.eye()))) > 0.15
+                && self.visible(at, a.eye())
+                && self.world.effect(a.entity, "minecraft:blindness", ticks, 0)
+                && let Entity::Player(id) = a.entity
+            {
+                let v = self.vision.entry(id).or_default();
+                v.flash = v.flash.max(ticks);
             }
         }
     }
@@ -312,6 +352,9 @@ pub trait Agent {
             ..Default::default()
         }
     }
+    fn hidden(&self) -> bool {
+        false
+    }
     fn phased(&self) -> bool {
         false
     }
@@ -352,6 +395,7 @@ macro_rules! kits{($(($index:literal,$field:ident,$name:literal,$ty:path)),+ $(,
  pub fn cancel(&mut self){$(self.$field.cancel();)+}
  pub fn leave(&mut self){$(self.$field.leave();)+}
  pub fn owns(&self,i:usize,id:u64)->bool{match i{$($index=>self.$field.owns(id),)+_=>false}}
+ pub fn hidden(&self,i:usize)->bool{match i{$($index=>self.$field.hidden(),)+_=>false}}
  pub fn phased(&self,i:usize)->bool{match i{$($index=>self.$field.phased(),)+_=>false}}
  pub fn camera(&self,i:usize)->Option<V3>{match i{$($index=>self.$field.camera(),)+_=>None}}
  pub fn equipped(&self,i:usize)->bool{match i{$($index=>self.$field.equipped(),)+_=>false}}
@@ -370,4 +414,5 @@ kits!(
     (12, cypher, "Cypher", cypher::Cypher),
     (13, fade, "Fade", fade::Fade),
     (14, neon, "Neon", neon::Neon),
+    (15, yoru, "Yoru", yoru::Yoru),
 );

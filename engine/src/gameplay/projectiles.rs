@@ -25,6 +25,7 @@ pub enum ProjectileKind {
 pub struct Projectile {
     #[serde(rename = "o")]
     pub owner: u128,
+    #[serde(rename = "k", alias = "kind")]
     pub kind: ProjectileKind,
     #[serde(rename = "p", alias = "position")]
     pub position: V3,
@@ -54,11 +55,12 @@ impl Projectile {
             self.kind,
             ProjectileKind::Knife { .. } | ProjectileKind::Rocket | ProjectileKind::ReconDart
         ) {
-            for a in world
-                .actors()
-                .into_iter()
-                .filter(|a| a.eligible && a.health > 0.0 && a.entity != Entity::Player(self.owner))
-            {
+            for a in world.actors().into_iter().filter(|a| {
+                a.eligible
+                    && a.health > 0.0
+                    && a.entity != Entity::Player(self.owner)
+                    && !world.status_immune(a.entity)
+            }) {
                 if let Some(t) = a.bounds.expanded(0.08).segment(self.position, to)
                     && hit.as_ref().is_none_or(|(old, _)| t < *old)
                 {
@@ -96,6 +98,7 @@ pub fn blade(center: V3, direction: V3) -> Vec<[[f32; 3]; 4]> {
 
 /// Common ordering for real arrows and temporary knives against utility and barriers.
 pub struct Shot {
+    pub attacker: Option<Entity>,
     pub from: V3,
     pub to: V3,
     pub damage: f32,
@@ -110,7 +113,14 @@ pub fn intercept(
 ) -> bool {
     let limit = super::shields::impact_limit(w, shot.from, shot.to, shot.padding);
     if let Some(hit) = utility_hit(shields, walls, objects, shot.from, shot.to, limit) {
-        apply_utility(hit.hit, shields, objects, shot.damage);
+        apply_utility(
+            hit.hit,
+            shields,
+            objects,
+            shot.damage,
+            shot.attacker,
+            shot.from,
+        );
         true
     } else {
         false
@@ -182,9 +192,11 @@ pub fn apply_utility(
     shields: &mut [super::shields::Shield],
     objects: &mut [super::objects::Object],
     damage: f32,
+    attacker: Option<Entity>,
+    from: V3,
 ) {
     match hit {
-        UtilityHit::Object(i) => objects[i].health = (objects[i].health - damage.max(0.)).max(0.),
+        UtilityHit::Object(i) => objects[i].damage(damage, attacker, from),
         UtilityHit::Shield(i) => shields[i].damage(damage),
         UtilityHit::Divide => {}
     }

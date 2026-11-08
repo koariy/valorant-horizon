@@ -2,6 +2,10 @@ use super::{geometry::*, *};
 use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum ObjectKind {
+    Echo,
+    DormantEcho,
+    Gatecrash,
+    Blindside,
     RelayBolt,
     HauntOrb,
     SeizeOrb,
@@ -20,9 +24,12 @@ pub enum ObjectKind {
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Object {
+    #[serde(skip)]
+    pub last_hit: Option<UtilityDamage>,
     pub id: u64,
     #[serde(rename = "o")]
     pub owner: u128,
+    #[serde(rename = "k", alias = "kind")]
     pub kind: ObjectKind,
     #[serde(rename = "p", alias = "position")]
     pub position: V3,
@@ -34,9 +41,14 @@ pub struct Object {
     pub velocity: V3,
     pub target: Option<Entity>,
 }
+#[derive(Clone, Debug)]
+pub struct UtilityDamage {
+    pub attacker: Option<Entity>,
+    pub from: V3,
+}
 impl ObjectKind {
     pub fn damageable(self) -> bool {
-        !matches!(self, Self::RelayBolt)
+        !matches!(self, Self::RelayBolt | Self::Blindside | Self::DormantEcho)
     }
     pub fn is_advanced(self) -> bool {
         matches!(
@@ -49,12 +61,23 @@ impl ObjectKind {
                 | Self::Haunt
                 | Self::Prowler
                 | Self::RelayBolt
+                | Self::Echo
+                | Self::DormantEcho
+                | Self::Gatecrash
+                | Self::Blindside
         )
     }
 }
 impl Object {
+    pub fn damage(&mut self, amount: f32, attacker: Option<Entity>, from: V3) {
+        if self.health <= 0. || amount <= 0. || !self.kind.damageable() {
+            return;
+        }
+        self.last_hit = Some(UtilityDamage { attacker, from });
+        self.health = (self.health - amount).max(0.);
+    }
     pub fn hit(&self, from: V3, to: V3, padding: f64) -> Option<f64> {
-        if !self.kind.damageable() {
+        if self.health <= 0. || self.ticks == 0 || !self.kind.damageable() {
             return None;
         }
         if !matches!(self.kind, ObjectKind::Trapwire) {
@@ -90,6 +113,9 @@ impl Object {
             | ObjectKind::SeizeOrb
             | ObjectKind::Haunt
             | ObjectKind::Prowler => (0.25, 0.5),
+            ObjectKind::Echo => (0.3, 1.8),
+            ObjectKind::DormantEcho | ObjectKind::Gatecrash => (0.15, 0.2),
+            ObjectKind::Blindside => (0.1, 0.2),
             ObjectKind::RelayBolt => (0.1, 0.2),
             ObjectKind::Drone => (0.15, 0.3),
             ObjectKind::ReconBolt => (0.12, 0.25),
@@ -122,8 +148,8 @@ pub fn strike(objects: &mut Vec<Object>, a: &Actor, w: &impl World) -> bool {
         .min_by(|(a, _), (b, _)| a.total_cmp(b))
         .map(|(_, i)| i);
     if let Some(i) = hit {
-        objects[i].health -= 4.0;
-        objects.retain(|o| o.health > 0.0);
+        objects[i].damage(4., Some(a.entity), from);
+        objects.retain(|o| o.health > 0.0 || matches!(o.kind, ObjectKind::Echo));
         true
     } else {
         false

@@ -86,6 +86,7 @@ fn boom_bot_acquires_visible_target_moves_and_explodes_on_contact() {
     w.actors[1] = actor(2, [0.0, 1.0, 5.0]);
     let mut s = Session::default();
     s.objects.push(Object {
+        last_hit: None,
         id: 1,
         owner: 1,
         kind: ObjectKind::BoomBot,

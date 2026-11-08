@@ -10,11 +10,17 @@ pub struct CollisionPadding {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Shield {
     pub owner: u128,
+    #[serde(rename = "p", alias = "center")]
     pub center: V3,
+    #[serde(rename = "r", alias = "radius")]
     pub radius: f64,
+    #[serde(rename = "t", alias = "ticks")]
     pub ticks: u32,
+    #[serde(rename = "h", alias = "health")]
     pub health: f32,
+    #[serde(rename = "a", alias = "active")]
     pub active: bool,
+    #[serde(rename = "s", alias = "spent")]
     pub spent: bool,
 }
 impl Shield {
@@ -87,7 +93,11 @@ pub fn impact_limit(w: &impl World, from: V3, to: V3, padding: CollisionPadding)
     let limit = block_hit(w, from, to, padding.terrain).unwrap_or(1.);
     w.actors()
         .iter()
-        .filter(|a| a.eligible && a.bounds.expanded(0.1).segment(from, from).is_none())
+        .filter(|a| {
+            a.eligible
+                && !w.status_immune(a.entity)
+                && a.bounds.expanded(0.1).segment(from, from).is_none()
+        })
         .filter_map(|a| a.bounds.expanded(padding.actors).segment(from, to))
         .fold(limit, f64::min)
 }

@@ -42,6 +42,7 @@ fn bolt(recon: bool, bounces: u8) -> Projectile {
 }
 fn utility(kind: ObjectKind, at: V3) -> Object {
     Object {
+        last_hit: None,
         id: 1,
         owner: 1,
         kind,
@@ -302,6 +303,7 @@ fn utility_raycast_respects_nearest_actor_shield_divide_and_object() {
         spent: true,
     }];
     let shot = || Shot {
+        attacker: Some(Entity::Player(1)),
         from: [0., 2., 0.],
         to: [0., 2., 8.],
         damage: 4.,

@@ -220,6 +220,65 @@ impl Game<'_> {
                 projectiles::beam,
                 smoke::orb,
             };
+            if matches!(object.kind, K::Echo) {
+                if object.health <= 0. {
+                    continue;
+                }
+                let facing =
+                    valorant_horizon_engine::gameplay::geometry::horizontal(object.velocity);
+                let right = [facing[2], 0., -facing[0]];
+                let parts = [
+                    ([-0.25, 0., -0.12], [-0.02, 0.7, 0.12], [20, 25, 65, 255]),
+                    ([0.02, 0., -0.12], [0.25, 0.7, 0.12], [20, 25, 65, 255]),
+                    ([-0.27, 0.7, -0.17], [0.27, 1.4, 0.17], [35, 50, 175, 255]),
+                    ([-0.43, 0.65, -0.12], [-0.28, 1.4, 0.12], [40, 55, 195, 255]),
+                    ([0.28, 0.65, -0.12], [0.43, 1.4, 0.12], [40, 55, 195, 255]),
+                    ([-0.22, 1.4, -0.22], [0.22, 1.8, 0.22], [150, 165, 180, 255]),
+                ];
+                for (min, max, color) in parts {
+                    for q in valorant_horizon_engine::gameplay::zones::box_quads(
+                        valorant_horizon_engine::gameplay::geometry::Box3 { min, max },
+                        [0.; 3],
+                    ) {
+                        let q = q.map(|p| {
+                            sub(
+                                add(
+                                    object.position,
+                                    [
+                                        right[0] * f64::from(p[0]) + facing[0] * f64::from(p[2]),
+                                        f64::from(p[1]),
+                                        right[2] * f64::from(p[0]) + facing[2] * f64::from(p[2]),
+                                    ],
+                                ),
+                                draw.camera,
+                            )
+                            .map(|v| v as f32)
+                        });
+                        self.native_world_quad(draw, "horizon/white", q, [0., 0., 16., 16.], color);
+                    }
+                }
+                continue;
+            }
+            if matches!(object.kind, K::Gatecrash | K::Blindside) {
+                let center = add(object.position, [0., 0.15, 0.]);
+                for q in orb(
+                    sub(center, draw.camera),
+                    if matches!(object.kind, K::Gatecrash) {
+                        0.22
+                    } else {
+                        0.14
+                    },
+                ) {
+                    self.native_world_quad(
+                        draw,
+                        "horizon/white",
+                        q,
+                        [0., 0., 16., 16.],
+                        [45, 75, 240, 230],
+                    );
+                }
+                continue;
+            }
             if matches!(object.kind, K::Haunt | K::HauntOrb | K::SeizeOrb) {
                 let center = add(object.position, [0., 0.25, 0.]);
                 for q in orb(sub(center, draw.camera), 0.28) {
@@ -316,6 +375,12 @@ impl Game<'_> {
                     quad,
                     [0.0, 0.0, 16.0, 16.0],
                     match object.kind {
+                        valorant_horizon_engine::gameplay::objects::ObjectKind::Echo
+                        | valorant_horizon_engine::gameplay::objects::ObjectKind::DormantEcho
+                        | valorant_horizon_engine::gameplay::objects::ObjectKind::Gatecrash
+                        | valorant_horizon_engine::gameplay::objects::ObjectKind::Blindside => {
+                            [50, 65, 225, 255]
+                        }
                         valorant_horizon_engine::gameplay::objects::ObjectKind::RelayBolt => {
                             [80, 215, 255, 255]
                         }

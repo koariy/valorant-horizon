@@ -78,6 +78,7 @@ pub struct Session {
     pub corpses: Vec<crate::advanced::Corpse>,
     pub budget: crate::advanced::Budget,
     pub extra_kills: Vec<(u128, Entity)>,
+    pub hidden: Vec<(u128, u32)>,
     pub viewers: HashMap<u128, Vec<u128>>,
     pub intel: recon::Intel,
     pub beams: Vec<recon::Beam>,
@@ -870,7 +871,7 @@ impl Session {
         }
         self.objects.retain(|o| {
             o.ticks > 0
-                && o.health > 0.0
+                && (o.health > 0.0 || matches!(o.kind, objects::ObjectKind::Echo))
                 && (!o.kind.is_advanced()
                     || self
                         .players
@@ -965,6 +966,9 @@ impl Session {
                     .iter()
                     .filter(|a| a.eligible && zone.touches(a.bounds))
                 {
+                    if w.status_immune(a.entity) {
+                        continue;
+                    }
                     if matches!(zone.kind, zones::ZoneKind::Gravity) {
                         w.push_entity(
                             a.entity,
@@ -1059,6 +1063,7 @@ impl Session {
                     &self.divides,
                     &mut self.objects,
                     projectiles::Shot {
+                        attacker: Some(Entity::Player(p.owner)),
                         from: p.position,
                         to: add(p.position, p.velocity),
                         damage: 10.,
@@ -1327,34 +1332,6 @@ impl Session {
                 }
                 continue;
             }
-            let object_hit = if matches!(p.kind, ProjectileKind::Knife { .. }) {
-                let end = add(p.position, p.velocity);
-                let wall = block_hit(w, p.position, end, 0.08).unwrap_or(1.0);
-                let wall = actors
-                    .iter()
-                    .filter(|a| a.entity != Entity::Player(p.owner) && a.eligible)
-                    .filter_map(|a| a.bounds.expanded(0.08).segment(p.position, end))
-                    .fold(wall, f64::min);
-                self.objects
-                    .iter()
-                    .enumerate()
-                    .filter(|(_, o)| o.owner != p.owner)
-                    .filter_map(|(i, o)| {
-                        o.bounds()
-                            .segment(p.position, end)
-                            .filter(|t| *t < wall)
-                            .map(|t| (t, i))
-                    })
-                    .min_by(|(a, _), (b, _)| a.total_cmp(b))
-                    .map(|(_, i)| i)
-            } else {
-                None
-            };
-            if let Some(i) = object_hit {
-                self.objects[i].health -= 10.0;
-                self.objects.retain(|o| o.health > 0.0);
-                continue;
-            }
             let before = p.position;
             let impact = p.advance(w);
             match (p.kind, impact) {
@@ -1366,6 +1343,7 @@ impl Session {
                     if self.objects.len() < MAX_OBJECTS {
                         self.next_object = self.next_object.saturating_add(1);
                         self.objects.push(objects::Object {
+                            last_hit: None,
                             id: self.next_object,
                             owner: p.owner,
                             kind: objects::ObjectKind::BlastPack,
@@ -1480,7 +1458,9 @@ impl Session {
                         .iter()
                         .filter(|a| a.eligible && distance(a.eye(), p.position) < 15.0)
                     {
-                        if block_hit(w, a.eye(), p.position, 0.0).is_none() {
+                        if !w.status_immune(a.entity)
+                            && block_hit(w, a.eye(), p.position, 0.0).is_none()
+                        {
                             let facing = unit(sub(p.position, a.eye()));
                             let dot = (0..3).map(|i| facing[i] * a.direction[i]).sum::<f64>();
                             let ticks = if dot > 0.15 { 40 } else { 6 };
@@ -1537,6 +1517,18 @@ impl Session {
         for (owner, target) in std::mem::take(&mut self.extra_kills) {
             self.defer_kill(w, owner, target, false);
         }
+        self.hidden = self
+            .players
+            .iter()
+            .filter(|(_, p)| {
+                p.extra.hidden(p.agent) || p.agent == 5 && p.reyna.phase > 0 && p.reyna.frenzy > 0
+            })
+            .filter_map(|(id, _)| {
+                w.network_id(Entity::Player(*id))
+                    .map(|entity| (*id, entity))
+            })
+            .take(64)
+            .collect();
         self.viewers = self
             .players
             .keys()
@@ -1644,6 +1636,14 @@ impl Session {
         Some(Snapshot {
             agent: p.agent,
             kit: p.extra.stats(p.agent),
+            hidden_entities: self
+                .hidden
+                .iter()
+                .filter(|(owner, _)| {
+                    *owner != id && !self.viewers.get(owner).is_some_and(|v| v.contains(&id))
+                })
+                .map(|(_, entity)| *entity)
+                .collect(),
             contacts: self.intel.snapshot(id),
             beams: self.beams.clone(),
             trails: self
@@ -1717,11 +1717,20 @@ impl Session {
                 .objects
                 .iter()
                 .filter(|o| {
-                    !matches!(o.kind, objects::ObjectKind::Trapwire)
-                        || o.owner == id
+                    !matches!(
+                        o.kind,
+                        objects::ObjectKind::Trapwire | objects::ObjectKind::DormantEcho
+                    ) || o.owner == id
                         || self.viewers.get(&o.owner).is_some_and(|v| v.contains(&id))
                         || self.positions.get(&Entity::Player(id)).is_some_and(|p| {
-                            distance(*p, scale(add(o.position, o.velocity), 0.5)) <= 3.
+                            distance(
+                                *p,
+                                if matches!(o.kind, objects::ObjectKind::Trapwire) {
+                                    scale(add(o.position, o.velocity), 0.5)
+                                } else {
+                                    o.position
+                                },
+                            ) <= 3.
                         })
                 })
                 .cloned()
@@ -1731,6 +1740,7 @@ impl Session {
                         .iter()
                         .enumerate()
                         .map(|(i, s)| objects::Object {
+                            last_hit: None,
                             id: u64::MAX - i as u64,
                             owner: id,
                             kind: objects::ObjectKind::Soul,

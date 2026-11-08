@@ -11,7 +11,7 @@ fn valorant_protection(
         {
             *canceled = true;
         }
-        if causing == direct && all.get(&causing).is_some_and(|p| p.disarmed) {
+        if causing != 0 && causing == direct && all.get(&causing).is_some_and(|p| p.disarmed) {
             *canceled = true;
         }
     }

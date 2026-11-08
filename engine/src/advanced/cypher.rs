@@ -365,7 +365,8 @@ impl Agent for Cypher {
             };
             if let Some(victim) = wire.victim {
                 if let Some(target) = c.actors.iter().find(|t| t.entity == victim && t.eligible) {
-                    if c.world.teleport_stamp(victim) != wire.teleport
+                    if !c.world.recon_target(id, victim)
+                        || c.world.teleport_stamp(victim) != wire.teleport
                         || distance(target.position, wire.anchor) > 5.
                     {
                         wire.victim = None;

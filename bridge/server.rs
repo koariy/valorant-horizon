@@ -43,6 +43,49 @@ static DECAY: AttachmentType<String> = AttachmentType {
     copy_on_death: false,
     sync: false,
 };
+impl Bridge<'_, '_> {
+    fn apply_status(
+        &mut self,
+        target: Entity,
+        name: &str,
+        ticks: u32,
+        amplifier: u8,
+        visible: bool,
+    ) -> bool {
+        if effects::hostile_status(name) && self.status_immune(target) {
+            return false;
+        }
+        let Some(effect) = horizon_client::brewing::effect(name) else {
+            return false;
+        };
+        match target {
+            Entity::Player(id) => {
+                let Some(t) = self.0.target_by_uuid(id) else {
+                    return false;
+                };
+                self.0
+                    .for_player(t, |g| {
+                        let mut status = horizon_client::effects::EffectInstance::new(
+                            effect.id,
+                            ticks as i32,
+                            i32::from(amplifier),
+                        );
+                        status.visible = visible;
+                        g.add_player_effect(status)
+                    })
+                    .unwrap_or(false)
+            }
+            Entity::Mob(id) => self
+                .0
+                .mobs
+                .iter_mut()
+                .find(|m| m.id == id)
+                .is_some_and(|m| {
+                    m.add_effect_with(effect.id, ticks as i32, i32::from(amplifier), false, false)
+                }),
+        }
+    }
+}
 impl World for Bridge<'_, '_> {
     fn network_id(&self, target: Entity) -> Option<u32> {
         match target {
@@ -426,6 +469,17 @@ impl World for Bridge<'_, '_> {
                     walls,
                     objects,
                     projectiles::Shot {
+                        attacker: match p.owner {
+                            Some(horizon_client::mobs::Who::Mob(id)) => Some(Entity::Mob(id)),
+                            Some(horizon_client::mobs::Who::Player) => p.owner_uuid.map(|parts| {
+                                Entity::Player(
+                                    parts
+                                        .into_iter()
+                                        .fold(0u128, |uuid, n| (uuid << 32) | u128::from(n as u32)),
+                                )
+                            }),
+                            None => None,
+                        },
                         from,
                         to,
                         damage,
@@ -514,33 +568,25 @@ impl World for Bridge<'_, '_> {
             .unwrap_or(0.)
     }
     fn effect(&mut self, target: Entity, name: &str, ticks: u32, amplifier: u8) -> bool {
-        let Some(effect) = horizon_client::brewing::effect(name) else {
+        self.apply_status(target, name, ticks, amplifier, true)
+    }
+    fn status_immune(&self, target: Entity) -> bool {
+        let Entity::Player(id) = target else {
             return false;
         };
-        match target {
-            Entity::Player(id) => {
-                let Some(t) = self.0.target_by_uuid(id) else {
-                    return false;
-                };
-                self.0
-                    .for_player(t, |g| {
-                        g.add_player_effect(horizon_client::effects::EffectInstance::new(
-                            effect.id,
-                            ticks as i32,
-                            i32::from(amplifier),
-                        ))
-                    })
-                    .unwrap_or(false)
-            }
-            Entity::Mob(id) => self
-                .0
-                .mobs
-                .iter_mut()
-                .find(|m| m.id == id)
-                .is_some_and(|m| {
-                    m.add_effect_with(effect.id, ticks as i32, i32::from(amplifier), false, false)
-                }),
-        }
+        self.0
+            .native_server_players()
+            .iter()
+            .find(|p| p.uuid == id)
+            .is_some_and(|p| {
+                effects::protections()
+                    .lock()
+                    .ok()
+                    .is_some_and(|all| all.get(&p.entity_id).is_some_and(|s| s.invulnerable))
+            })
+    }
+    fn quiet_effect(&mut self, target: Entity, name: &str, ticks: u32, amplifier: u8) -> bool {
+        self.apply_status(target, name, ticks, amplifier, false)
     }
     fn protect(&mut self, owner: u128, mut state: effects::Protection) {
         if let Some(p) = self

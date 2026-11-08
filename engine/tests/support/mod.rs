@@ -20,6 +20,7 @@ pub fn actor(id: u128, p: V3) -> Actor {
     }
 }
 pub struct TestWorld {
+    pub protections: std::collections::HashMap<u128, effects::Protection>,
     pub teleports: std::collections::HashMap<Entity, u64>,
     pub intel: std::collections::HashMap<u128, Vec<u128>>,
     pub unloaded_z: Option<i32>,
@@ -39,6 +40,7 @@ pub struct TestWorld {
 impl Default for TestWorld {
     fn default() -> Self {
         Self {
+            protections: Default::default(),
             teleports: Default::default(),
             intel: Default::default(),
             unloaded_z: None,
@@ -67,7 +69,7 @@ impl World for TestWorld {
         }
     }
     fn can_harm(&self, _owner: u128, target: Entity) -> bool {
-        !self.protected.contains(&target)
+        !self.status_immune(target) && !self.protected.contains(&target)
     }
     fn now(&self) -> i64 {
         self.time
@@ -193,7 +195,19 @@ impl World for TestWorld {
         a.health = (a.health + d).min(a.max_health);
         true
     }
+    fn protect(&mut self, id: u128, p: effects::Protection) {
+        self.protections.insert(id, p);
+    }
+    fn status_immune(&self, target: Entity) -> bool {
+        match target {
+            Entity::Player(id) => self.protections.get(&id).is_some_and(|p| p.invulnerable),
+            _ => false,
+        }
+    }
     fn effect(&mut self, t: Entity, name: &str, _: u32, _: u8) -> bool {
+        if self.status_immune(t) && effects::hostile_status(name) {
+            return false;
+        }
         self.effects.push((t, name.into()));
         true
     }

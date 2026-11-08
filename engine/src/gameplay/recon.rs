@@ -6,6 +6,7 @@ pub const MAX_TAGS: usize = 64;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Contact {
     pub entity: u32,
+    #[serde(rename = "t", alias = "ticks")]
     pub ticks: u32,
 }
 struct Reveal {
