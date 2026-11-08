@@ -1,2 +1,2 @@
-ec1f85decbaeeb7069a5e2bade4142b20238a75d11c652d1dc0cd8b37d3eaadb  valorant_horizon-0.3.0-dev.4.hnmod
-ec1f85decbaeeb7069a5e2bade4142b20238a75d11c652d1dc0cd8b37d3eaadb  valorant_horizon-0.3.0-dev.4-native-experimental.hmod
+586f6c703c21d92e0b5c51920902a2f1dcb2960622989f5d20294caeeedeb3af  valorant_horizon-0.4.0-dev.10.hnmod
+a952aeb390fa9f235a99bef055e0739b8a6daffc002d73cd10981d98a714182d  valorant_horizon-0.4.0-dev.10-source.zip
