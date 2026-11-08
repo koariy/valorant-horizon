@@ -59,6 +59,19 @@ fn valorant_key(game: &mut crate::game::Game<'_>, key: &str, pressed: bool) {
         }
         return;
     }
+    if key == "key.keyboard.v" && game.native_playing() {
+        // End held casts before freeing the pointer; the screen never pauses simulation.
+        game.vh_send(Action::Cancel);
+        game.vh_send(Action::Stabilize(false));
+        if game.native_mod_screen_open(ID) {
+            if let Ok(mut s) = state().lock() {
+                s.menu = true;
+                s.held.clear();
+                s.ui.close = false;
+            }
+        }
+        return;
+    }
     if !game.native_playing() {
         return;
     }

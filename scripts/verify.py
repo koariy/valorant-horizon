@@ -10,6 +10,7 @@ with tempfile.TemporaryDirectory(prefix="valorant-horizon-") as temporary:
     shutil.copytree(root / "spatial", Path(temporary) / "spatial", ignore=shutil.ignore_patterns("target", "Cargo.lock"))
     shutil.copytree(root / "native-state", Path(temporary) / "native-state", ignore=shutil.ignore_patterns("target", "Cargo.lock"))
     shutil.copytree(root / "helpers", Path(temporary) / "helpers")
+    shutil.copytree(root / "bridge", Path(temporary) / "bridge")
     engine = Path(temporary) / "engine"
     shutil.copytree(root / "engine", engine, ignore=shutil.ignore_patterns("target", "Cargo.lock"))
     for arguments in [

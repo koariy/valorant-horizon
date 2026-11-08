@@ -1,3 +1,5 @@
+> Later presentation milestone: [0.5.0-dev.1](../presentation/RESULTS.md).
+
 # Valorant Horizon 0.4.0-dev.10 — 2026-11-08
 
 22 requested agents are registered. This expansion continued the existing 12-agent architecture; each milestone was tested and built before moving to the next agent. This is code/native verification, not a completed Minecraft playtest.

@@ -215,10 +215,12 @@ impl World for Bridge<'_, '_> {
             return false;
         };
         let key = (level.epoch().get(), self.0.dim.id().to_owned(), id);
+        self.0.vh_feedback(Entity::Player(id), 2);
         if !self.move_player(id, position) {
             return false;
         }
         teleport::record(key);
+        self.0.vh_feedback_at(position, 2);
         true
     }
     fn teleport_stamp(&self, target: Entity) -> u64 {
@@ -528,7 +530,7 @@ impl World for Bridge<'_, '_> {
         }
     }
     fn heal(&mut self, target: Entity, amount: f32) -> bool {
-        match target {
+        let healed = match target {
             Entity::Player(id) => {
                 let Some(t) = self.0.target_by_uuid(id) else {
                     return false;
@@ -550,7 +552,11 @@ impl World for Bridge<'_, '_> {
                 };
                 self.0.native_set_mob_health(dim, id, m.health + amount)
             }
+        };
+        if healed {
+            self.0.vh_feedback(target, 1);
         }
+        healed
     }
     fn absorb(&mut self, owner: u128, delta: f32) -> f32 {
         let Some(target) = self.0.target_by_uuid(owner) else {
@@ -643,10 +649,14 @@ impl World for Bridge<'_, '_> {
             })
     }
     fn hurt_with(&mut self, owner: u128, target: Entity, damage: f32, kind: &str) -> Hit {
-        self.0.vh_damage(owner, target, damage, kind)
+        let hit = self.0.vh_damage(owner, target, damage, kind);
+        if hit.accepted {
+            self.0.vh_feedback(target, 0);
+        }
+        hit
     }
     fn hurt(&mut self, owner: u128, target: Entity, damage: f32) -> Hit {
-        self.0.vh_damage(owner, target, damage, "minecraft:arrow")
+        self.hurt_with(owner, target, damage, "minecraft:arrow")
     }
 }
 impl Game<'_> {

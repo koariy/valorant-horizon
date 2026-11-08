@@ -1,4 +1,4 @@
-> Historical 0.2.0 report. Latest: [0.4.0-dev.10 verification](expansion/RESULTS.md).
+> Historical 0.2.0 report. Latest: [0.5.0-dev.1 presentation verification](presentation/RESULTS.md); [agent expansion](expansion/RESULTS.md).
 
 # Проверки Valorant Horizon 0.2.0
 

@@ -1,6 +1,6 @@
 [mod]
 id = "valorant_horizon"
-version = "0.4.0-dev.10"
+version = "0.5.0-dev.1"
 
 [compatibility]
 horizon_revision = "41f822b659789780f58d32c63ddfb6887ea1b8bf"
@@ -478,3 +478,65 @@ hook_version=1
 kind="HEAD"
 helper="helpers/player_departed.rs"
 bindings=[{name="player",ty="u128",value="player"}]
+
+[[module]]
+id = "module_ui"
+file = "crates/horizon-client/src/game.rs"
+name = "valorant_ui"
+source = "bridge/ui.rs"
+
+[[injection]]
+id = "ui_render"
+target = "horizon_client::game::native_hooks::Game<'_>::native_screen_render_post"
+kind = "HEAD"
+helper = "helpers/ui_render.rs"
+bindings = [
+  {name="game",ty="&crate::game::Game<'_>",value="&*self"},
+  {name="batch",ty="&mut crate::hud::HudBatch",value="batch"},
+]
+
+[[injection]]
+id = "ui_key"
+target = "horizon_client::game::native_hooks::Game<'_>::native_screen_key_pressed_pre"
+kind = "HEAD"
+helper = "helpers/ui_key.rs"
+bindings = [
+  {name="game",ty="&crate::game::Game<'_>",value="&*self"},
+  {name="key",ty="&str",value="key"},
+  {name="canceled",ty="&mut bool",value="canceled"},
+]
+
+[[injection]]
+id = "ui_char"
+target = "horizon_client::game::native_hooks::Game<'_>::native_screen_char_typed_pre"
+kind = "HEAD"
+helper = "helpers/ui_char.rs"
+bindings = [
+  {name="game",ty="&crate::game::Game<'_>",value="&*self"},
+  {name="c",ty="char",value="c"},
+  {name="canceled",ty="&mut bool",value="canceled"},
+]
+
+[[injection]]
+id = "ui_mouse"
+target = "horizon_client::game::native_hooks::Game<'_>::native_screen_mouse_button_pressed_pre"
+kind = "HEAD"
+helper = "helpers/ui_mouse.rs"
+bindings = [
+  {name="game",ty="&crate::game::Game<'_>",value="&*self"},
+  {name="screen",ty="&crate::mod_api::NativeScreenView<'_>",value="screen"},
+  {name="button",ty="i32",value="button"},
+  {name="canceled",ty="&mut bool",value="canceled"},
+]
+
+[[module]]
+id = "module_ui_input"
+file = "crates/horizon-client/src/game.rs"
+name = "valorant_ui_input"
+source = "bridge/ui_input.rs"
+
+[[module]]
+id = "module_feedback"
+file = "crates/horizon-client/src/game.rs"
+name = "valorant_feedback"
+source = "bridge/feedback.rs"

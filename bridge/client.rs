@@ -1,6 +1,6 @@
 use super::{Game, native_world_draw::NativeWorldDraw};
 use valorant_horizon_engine::{
-    gameplay::{Action, Request, Snapshot, geometry::sub, smoke::sphere},
+    gameplay::{Action, Request, Snapshot, geometry::sub},
     server::CHANNEL,
     state,
 };
@@ -58,10 +58,28 @@ impl Game<'_> {
         }
     }
     pub(super) fn vh_world(&self, draw: &mut NativeWorldDraw) {
-        let snapshot = state().lock().ok().and_then(|s| s.snapshot.clone());
+        let (snapshot, quality, mesh) = state()
+            .lock()
+            .ok()
+            .map(|mut s| (s.snapshot.clone(), s.presentation.quality, s.mesh.take()))
+            .unwrap_or_default();
         let Some(snapshot) = snapshot else {
             return;
         };
+        let sphere = |c, r| {
+            valorant_horizon_engine::presentation::mesh::sphere_mesh(
+                c,
+                r,
+                if r < 0.8 {
+                    valorant_horizon_engine::presentation::Quality::Low
+                } else {
+                    quality
+                },
+            )
+        };
+        let mut frame = mesh
+            .unwrap_or_else(|| valorant_horizon_engine::presentation::mesh::Frame::new(quality));
+        frame.reset(quality);
         if let Ok(mut d) = horizon_client_render::valorant_spatial::audio_planes().lock() {
             *d = snapshot
                 .divides
@@ -76,13 +94,17 @@ impl Game<'_> {
         if let Ok(mut p) = horizon_client_render::valorant_spatial::listener().lock() {
             *p = draw.camera;
         }
+        for smoke in &snapshot.smokes {
+            frame.smoke(
+                smoke,
+                draw.camera,
+                draw.game_time as f64 + f64::from(draw.partial),
+            );
+        }
         for shield in &snapshot.shields {
             for q in sphere(sub(shield.center, draw.camera), shield.radius) {
-                self.native_world_quad(
-                    draw,
-                    "horizon/white",
+                frame.push(
                     q,
-                    [0., 0., 16., 16.],
                     if shield.active {
                         [50, 160, 220, 255]
                     } else {
@@ -93,13 +115,7 @@ impl Game<'_> {
         }
         for star in &snapshot.stars {
             for quad in sphere(sub(star.position, draw.camera), 0.22) {
-                self.native_world_quad(
-                    draw,
-                    "horizon/white",
-                    quad,
-                    [0., 0., 16., 16.],
-                    [235, 175, 65, 255],
-                );
+                frame.push(quad, [235, 175, 65, 255]);
             }
         }
         for d in &snapshot.divides {
@@ -116,101 +132,22 @@ impl Game<'_> {
                 add(add(base, tangent), [0., -512., 0.]),
             ]
             .map(|p| sub(p, draw.camera).map(|v| v as f32));
-            self.native_world_quad(
-                draw,
-                "horizon/white",
-                points,
-                [0., 0., 16., 16.],
-                [95, 35, 150, 255],
-            );
-            self.native_world_quad(
-                draw,
-                "horizon/white",
+            frame.push(points, [95, 35, 150, 255]);
+            frame.push(
                 [points[3], points[2], points[1], points[0]],
-                [0., 0., 16., 16.],
                 [95, 35, 150, 255],
             );
         }
         for zone in &snapshot.zones {
-            let mut visual_bounds = zone.bounds;
-            if matches!(
-                zone.kind,
-                valorant_horizon_engine::gameplay::zones::ZoneKind::Whirlpool
-            ) {
-                visual_bounds.max[1] = visual_bounds.min[1] + 0.2;
-            }
-            for quad in
-                valorant_horizon_engine::gameplay::zones::box_quads(visual_bounds, draw.camera)
-            {
-                self.native_world_quad(
-                    draw,
-                    "horizon/white",
-                    quad,
-                    [0.0, 0.0, 16.0, 16.0],
-                    if matches!(
-                        zone.kind,
-                        valorant_horizon_engine::gameplay::zones::ZoneKind::ElectricWall
-                            | valorant_horizon_engine::gameplay::zones::ZoneKind::ElectricPulse
-                    ) {
-                        [35, 185, 255, 255]
-                    } else if matches!(
-                        zone.kind,
-                        valorant_horizon_engine::gameplay::zones::ZoneKind::Seize
-                            | valorant_horizon_engine::gameplay::zones::ZoneKind::Nightfall
-                    ) {
-                        [65, 25, 95, 170]
-                    } else if matches!(
-                        zone.kind,
-                        valorant_horizon_engine::gameplay::zones::ZoneKind::CyberCage
-                    ) {
-                        [70, 130, 145, 255]
-                    } else if matches!(
-                        zone.kind,
-                        valorant_horizon_engine::gameplay::zones::ZoneKind::WaterWall
-                    ) {
-                        [35, 165, 220, 255]
-                    } else if matches!(
-                        zone.kind,
-                        valorant_horizon_engine::gameplay::zones::ZoneKind::Whirlpool
-                    ) {
-                        [35, 165, 220, 150]
-                    } else if matches!(
-                        zone.kind,
-                        valorant_horizon_engine::gameplay::zones::ZoneKind::Gravity
-                            | valorant_horizon_engine::gameplay::zones::ZoneKind::Nova
-                    ) {
-                        [120, 75, 210, 160]
-                    } else if matches!(
-                        zone.kind,
-                        valorant_horizon_engine::gameplay::zones::ZoneKind::Stim
-                            | valorant_horizon_engine::gameplay::zones::ZoneKind::Acid
-                    ) {
-                        [90, 210, 160, 140]
-                    } else if matches!(
-                        zone.kind,
-                        valorant_horizon_engine::gameplay::zones::ZoneKind::Orbital
-                    ) {
-                        [255, 60, 15, 190]
-                    } else if matches!(
-                        zone.kind,
-                        valorant_horizon_engine::gameplay::zones::ZoneKind::Slow
-                    ) {
-                        [105, 205, 240, 180]
-                    } else {
-                        [255, 105, 25, 255]
-                    },
-                );
-            }
+            frame.surface(
+                zone,
+                draw.camera,
+                draw.game_time as f64 + f64::from(draw.partial),
+            );
         }
         if let Some(preview) = &snapshot.preview {
             for quad in sphere(sub(preview.center, draw.camera), preview.radius) {
-                self.native_world_quad(
-                    draw,
-                    "horizon/white",
-                    quad,
-                    [0.0, 0.0, 16.0, 16.0],
-                    preview.color,
-                );
+                frame.push(quad, preview.color);
             }
         }
         for object in &snapshot.objects {
@@ -254,13 +191,7 @@ impl Game<'_> {
                             center.map(|v| v as f32),
                         ];
                         for q in [q, [q[3], q[2], q[1], q[0]]] {
-                            self.native_world_quad(
-                                draw,
-                                "horizon/white",
-                                q,
-                                [0., 0., 16., 16.],
-                                [95, 220, 80, if object.ticks < 10 { 160 } else { 90 }],
-                            );
+                            frame.push(q, [95, 220, 80, if object.ticks < 10 { 160 } else { 90 }]);
                         }
                     }
                 } else if matches!(object.kind, K::Plasma) {
@@ -269,7 +200,7 @@ impl Game<'_> {
                         add(center, scale(unit(object.velocity), -0.3)),
                         0.06,
                     ) {
-                        self.native_world_quad(draw, "horizon/white", q, [0., 0., 16., 16.], color);
+                        frame.push(q, color);
                     }
                 } else if matches!(object.kind, K::Wingman) {
                     let b = valorant_horizon_engine::gameplay::geometry::Box3 {
@@ -277,7 +208,7 @@ impl Game<'_> {
                         max: add(object.position, [0.2, 0.5, 0.2]),
                     };
                     for q in valorant_horizon_engine::gameplay::zones::box_quads(b, draw.camera) {
-                        self.native_world_quad(draw, "horizon/white", q, [0., 0., 16., 16.], color);
+                        frame.push(q, color);
                     }
                 } else {
                     for q in orb(
@@ -288,20 +219,14 @@ impl Game<'_> {
                             0.16
                         },
                     ) {
-                        self.native_world_quad(draw, "horizon/white", q, [0., 0., 16., 16.], color);
+                        frame.push(q, color);
                     }
                     if matches!(object.kind, K::Thrash) {
                         for q in valorant_horizon_engine::gameplay::projectiles::blade(
                             center,
                             object.velocity,
                         ) {
-                            self.native_world_quad(
-                                draw,
-                                "horizon/white",
-                                q,
-                                [0., 0., 16., 16.],
-                                color,
-                            );
+                            frame.push(q, color);
                         }
                     }
                 }
@@ -336,13 +261,7 @@ impl Game<'_> {
                                 )
                                 .map(|n| n as f32)
                             });
-                            self.native_world_quad(
-                                draw,
-                                "horizon/white",
-                                q,
-                                [0., 0., 16., 16.],
-                                [100, 185, 75, 240],
-                            );
+                            frame.push(q, [100, 185, 75, 240]);
                         }
                     }
                 } else if matches!(object.kind, K::SkyeHawk) {
@@ -351,32 +270,14 @@ impl Game<'_> {
                         valorant_horizon_engine::gameplay::geometry::horizontal(object.velocity);
                     let side = [dir[2], 0., -dir[0]];
                     for q in beam(add(p, scale(side, -0.45)), add(p, scale(side, 0.45)), 0.07) {
-                        self.native_world_quad(
-                            draw,
-                            "horizon/white",
-                            q,
-                            [0., 0., 16., 16.],
-                            [155, 220, 95, 240],
-                        );
+                        frame.push(q, [155, 220, 95, 240]);
                     }
                     for q in orb(p, 0.16) {
-                        self.native_world_quad(
-                            draw,
-                            "horizon/white",
-                            q,
-                            [0., 0., 16., 16.],
-                            [245, 215, 120, 245],
-                        );
+                        frame.push(q, [245, 215, 120, 245]);
                     }
                 } else {
                     for q in orb(sub(add(object.position, [0., 0.25, 0.]), draw.camera), 0.3) {
-                        self.native_world_quad(
-                            draw,
-                            "horizon/white",
-                            q,
-                            [0., 0., 16., 16.],
-                            [150, 215, 65, 225],
-                        );
+                        frame.push(q, [150, 215, 65, 225]);
                     }
                 }
                 continue;
@@ -388,23 +289,11 @@ impl Game<'_> {
                         sub(add(object.velocity, [0., 0.1, 0.]), draw.camera),
                         0.16,
                     ) {
-                        self.native_world_quad(
-                            draw,
-                            "horizon/white",
-                            q,
-                            [0., 0., 16., 16.],
-                            [255, 145, 45, 220],
-                        );
+                        frame.push(q, [255, 145, 45, 220]);
                     }
                 } else {
                     for q in orb(sub(object.position, draw.camera), 0.15) {
-                        self.native_world_quad(
-                            draw,
-                            "horizon/white",
-                            q,
-                            [0., 0., 16., 16.],
-                            [255, 155, 55, 230],
-                        );
+                        frame.push(q, [255, 155, 55, 230]);
                     }
                 }
                 continue;
@@ -438,7 +327,7 @@ impl Game<'_> {
                         0.15
                     },
                 ) {
-                    self.native_world_quad(draw, "horizon/white", q, [0., 0., 16., 16.], color);
+                    frame.push(q, color);
                 }
                 continue;
             }
@@ -450,36 +339,18 @@ impl Game<'_> {
                         sub(object.velocity, draw.camera),
                         width,
                     ) {
-                        self.native_world_quad(
-                            draw,
-                            "horizon/white",
-                            q,
-                            [0., 0., 16., 16.],
-                            [250, 220, 140, 100],
-                        );
+                        frame.push(q, [250, 220, 140, 100]);
                     }
                     let b = valorant_horizon_engine::gameplay::geometry::Box3 {
                         min: add(object.position, [-0.3, -0.8, -0.15]),
                         max: add(object.position, [0.3, 1., 0.15]),
                     };
                     for q in valorant_horizon_engine::gameplay::zones::box_quads(b, draw.camera) {
-                        self.native_world_quad(
-                            draw,
-                            "horizon/white",
-                            q,
-                            [0., 0., 16., 16.],
-                            [255, 230, 185, 170],
-                        );
+                        frame.push(q, [255, 230, 185, 170]);
                     }
                 } else {
                     for q in orb(sub(add(object.position, [0., 0.15, 0.]), draw.camera), 0.22) {
-                        self.native_world_quad(
-                            draw,
-                            "horizon/white",
-                            q,
-                            [0., 0., 16., 16.],
-                            [255, 230, 160, 230],
-                        );
+                        frame.push(q, [255, 230, 160, 230]);
                     }
                 }
                 continue;
@@ -495,20 +366,8 @@ impl Game<'_> {
                     add(object.position, side),
                 ]
                 .map(|p| sub(p, draw.camera).map(|v| v as f32));
-                self.native_world_quad(
-                    draw,
-                    "horizon/white",
-                    p,
-                    [0., 0., 16., 16.],
-                    [130, 60, 225, 140],
-                );
-                self.native_world_quad(
-                    draw,
-                    "horizon/white",
-                    [p[3], p[2], p[1], p[0]],
-                    [0., 0., 16., 16.],
-                    [130, 60, 225, 140],
-                );
+                frame.push(p, [130, 60, 225, 140]);
+                frame.push([p[3], p[2], p[1], p[0]], [130, 60, 225, 140]);
                 continue;
             }
             if matches!(object.kind, K::IsoOrb | K::IsoAura) {
@@ -518,13 +377,7 @@ impl Game<'_> {
                 let aura = matches!(object.kind, K::IsoAura);
                 let center = add(object.position, [0., if aura { 0.9 } else { 0.2 }, 0.]);
                 for q in orb(sub(center, draw.camera), if aura { 1.1 } else { 0.2 }) {
-                    self.native_world_quad(
-                        draw,
-                        "horizon/white",
-                        q,
-                        [0., 0., 16., 16.],
-                        [160, 70, 240, if aura { 95 } else { 240 }],
-                    );
+                    frame.push(q, [160, 70, 240, if aura { 95 } else { 240 }]);
                 }
                 continue;
             }
@@ -562,7 +415,7 @@ impl Game<'_> {
                             )
                             .map(|v| v as f32)
                         });
-                        self.native_world_quad(draw, "horizon/white", q, [0., 0., 16., 16.], color);
+                        frame.push(q, color);
                     }
                 }
                 continue;
@@ -577,37 +430,19 @@ impl Game<'_> {
                         0.14
                     },
                 ) {
-                    self.native_world_quad(
-                        draw,
-                        "horizon/white",
-                        q,
-                        [0., 0., 16., 16.],
-                        [45, 75, 240, 230],
-                    );
+                    frame.push(q, [45, 75, 240, 230]);
                 }
                 continue;
             }
             if matches!(object.kind, K::Haunt | K::HauntOrb | K::SeizeOrb) {
                 let center = add(object.position, [0., 0.25, 0.]);
                 for q in orb(sub(center, draw.camera), 0.28) {
-                    self.native_world_quad(
-                        draw,
-                        "horizon/white",
-                        q,
-                        [0., 0., 16., 16.],
-                        [40, 15, 65, 255],
-                    );
+                    frame.push(q, [40, 15, 65, 255]);
                 }
                 if matches!(object.kind, K::Haunt) {
                     let pupil = add(center, scale(unit(sub(draw.camera, center)), 0.27));
                     for q in orb(sub(pupil, draw.camera), 0.09) {
-                        self.native_world_quad(
-                            draw,
-                            "horizon/white",
-                            q,
-                            [0., 0., 16., 16.],
-                            [160, 225, 230, 255],
-                        );
+                        frame.push(q, [160, 225, 230, 255]);
                     }
                     for side in [-1., 0., 1.] {
                         for q in beam(
@@ -615,13 +450,7 @@ impl Game<'_> {
                             sub(add(object.position, [side * 0.4, -0.1, 0.2]), draw.camera),
                             0.025,
                         ) {
-                            self.native_world_quad(
-                                draw,
-                                "horizon/white",
-                                q,
-                                [0., 0., 16., 16.],
-                                [105, 30, 145, 220],
-                            );
+                            frame.push(q, [105, 30, 145, 220]);
                         }
                     }
                 }
@@ -632,25 +461,13 @@ impl Game<'_> {
                 let side = [-forward[2], 0., forward[0]];
                 let head = add(add(object.position, [0., 0.32, 0.]), scale(forward, 0.25));
                 for q in orb(sub(head, draw.camera), 0.12) {
-                    self.native_world_quad(
-                        draw,
-                        "horizon/white",
-                        q,
-                        [0., 0., 16., 16.],
-                        [155, 220, 230, 255],
-                    );
+                    frame.push(q, [155, 220, 230, 255]);
                 }
                 for n in [-1., 1.] {
                     let from = add(object.position, add([0., 0.15, 0.], scale(side, n * 0.2)));
                     let tip = add(from, add(scale(forward, 0.5), scale(side, n * 0.25)));
                     for q in beam(sub(from, draw.camera), sub(tip, draw.camera), 0.04) {
-                        self.native_world_quad(
-                            draw,
-                            "horizon/white",
-                            q,
-                            [0., 0., 16., 16.],
-                            [45, 15, 70, 255],
-                        );
+                        frame.push(q, [45, 15, 70, 255]);
                     }
                 }
             }
@@ -663,13 +480,7 @@ impl Game<'_> {
                     sub(object.velocity, draw.camera),
                     0.025,
                 ) {
-                    self.native_world_quad(
-                        draw,
-                        "horizon/white",
-                        q,
-                        [0., 0., 16., 16.],
-                        [60, 200, 220, 255],
-                    );
+                    frame.push(q, [60, 200, 220, 255]);
                 }
                 continue;
             }
@@ -677,11 +488,7 @@ impl Game<'_> {
             for quad in
                 valorant_horizon_engine::gameplay::zones::box_quads(object.bounds(), draw.camera)
             {
-                self.native_world_quad(
-                    draw,
-                    "horizon/white",
-                    quad,
-                    [0.0, 0.0, 16.0, 16.0],
+                frame.push(quad,
                     match object.kind {
                         valorant_horizon_engine::gameplay::objects::ObjectKind::Wingman | valorant_horizon_engine::gameplay::objects::ObjectKind::Dizzy | valorant_horizon_engine::gameplay::objects::ObjectKind::Thrash | valorant_horizon_engine::gameplay::objects::ObjectKind::Plasma | valorant_horizon_engine::gameplay::objects::ObjectKind::Mosh | valorant_horizon_engine::gameplay::objects::ObjectKind::MoshPatch | valorant_horizon_engine::gameplay::objects::ObjectKind::WingmanGlobule | valorant_horizon_engine::gameplay::objects::ObjectKind::DizzyGlobule | valorant_horizon_engine::gameplay::objects::ObjectKind::ThrashGlobule => [100,180,220,220],
 
@@ -764,13 +571,7 @@ impl Game<'_> {
                         add(at, scale(dir, 0.2)),
                         0.03,
                     ) {
-                        self.native_world_quad(
-                            draw,
-                            "horizon/white",
-                            q,
-                            [0., 0., 16., 16.],
-                            [180, 220, 240, 255],
-                        );
+                        frame.push(q, [180, 220, 240, 255]);
                     }
                 }
             }
@@ -780,13 +581,7 @@ impl Game<'_> {
                     sub(add(o.position, [0., 0.1, 0.]), draw.camera),
                     0.2 + phase * 4.,
                 ) {
-                    self.native_world_quad(
-                        draw,
-                        "horizon/white",
-                        q,
-                        [0., 0., 16., 16.],
-                        [50, 160, 255, (80. * (1. - phase)) as u8],
-                    );
+                    frame.push(q, [50, 160, 255, (80. * (1. - phase)) as u8]);
                 }
             }
         }
@@ -805,29 +600,12 @@ impl Game<'_> {
                     ),
                     (f.bounds.max[0] - f.bounds.min[0]) * 0.5,
                 )
+                .collect::<Vec<_>>()
             } else {
                 valorant_horizon_engine::gameplay::zones::box_quads(f.bounds, draw.camera)
             };
             for q in quads {
-                self.native_world_quad(
-                    draw,
-                    "horizon/white",
-                    q,
-                    [0., 0., 16., 16.],
-                    [75, 180, 20, 255],
-                );
-            }
-        }
-        for smoke in &snapshot.smokes {
-            // Subtract f64 camera first: preserve precision near the world border.
-            for quad in sphere(sub(smoke.center, draw.camera), smoke.radius) {
-                self.native_world_quad(
-                    draw,
-                    "horizon/white",
-                    quad,
-                    [0.0, 0.0, 16.0, 16.0],
-                    smoke.color,
-                );
+                frame.push(q, [75, 180, 20, 255]);
             }
         }
         if snapshot.agent == 0
@@ -848,13 +626,7 @@ impl Game<'_> {
                 for quad in
                     valorant_horizon_engine::gameplay::projectiles::blade(center, [0.0, 1.0, 0.0])
                 {
-                    self.native_world_quad(
-                        draw,
-                        "horizon/white",
-                        quad,
-                        [0.0, 0.0, 16.0, 16.0],
-                        [215, 250, 255, 255],
-                    );
+                    frame.push(quad, [215, 250, 255, 255]);
                 }
             }
         }
@@ -864,13 +636,7 @@ impl Game<'_> {
                 sub(t.to, draw.camera),
                 0.045,
             ) {
-                self.native_world_quad(
-                    draw,
-                    "horizon/white",
-                    q,
-                    [0., 0., 16., 16.],
-                    [110, 45, 160, 220],
-                );
+                frame.push(q, [110, 45, 160, 220]);
             }
         }
         for b in &snapshot.beams {
@@ -879,13 +645,7 @@ impl Game<'_> {
                 sub(b.to, draw.camera),
                 0.35,
             ) {
-                self.native_world_quad(
-                    draw,
-                    "horizon/white",
-                    q,
-                    [0., 0., 16., 16.],
-                    [75, 170, 255, 210],
-                );
+                frame.push(q, [75, 170, 255, 210]);
             }
         }
         for projectile in &snapshot.projectiles {
@@ -922,11 +682,31 @@ impl Game<'_> {
             ) {
                 valorant_horizon_engine::gameplay::projectiles::blade(center, projectile.velocity)
             } else {
-                sphere(center, 0.15)
+                sphere(center, 0.15).collect::<Vec<_>>()
             };
             for quad in quads {
-                self.native_world_quad(draw, "horizon/white", quad, [0.0, 0.0, 16.0, 16.0], color);
+                frame.push(quad, color);
             }
+        }
+        frame.zones(
+            &snapshot,
+            draw.camera,
+            draw.game_time as f64 + f64::from(draw.partial),
+        );
+        if let Ok(s) = state().lock() {
+            s.scene.draw(&mut frame, draw.camera, draw.partial);
+        }
+        for face in frame.sorted() {
+            self.native_world_quad(
+                draw,
+                "horizon/white",
+                face.points,
+                [0., 0., 16., 16.],
+                face.color,
+            );
+        }
+        if let Ok(mut s) = state().lock() {
+            s.mesh = Some(frame);
         }
     }
     pub(super) fn vh_fog(&self, camera: [f64; 3], fog: &mut horizon_client::fog::FogData) {

@@ -2,6 +2,7 @@ pub mod abilities;
 pub mod advanced;
 pub mod agents;
 pub mod gameplay;
+pub mod presentation;
 pub mod server;
 pub mod targeting;
 use abilities::{Event, Runtime};
@@ -23,6 +24,11 @@ pub fn state() -> &'static Mutex<State> {
     STATE.get_or_init(|| Mutex::new(State::default()))
 }
 pub struct State {
+    pub presentation: presentation::Settings,
+    pub ui: presentation::ui::Menu,
+    pub scene: presentation::mesh::Scene,
+    pub mesh: Option<presentation::mesh::Frame>,
+    pub presentation_loaded: bool,
     pub held: std::collections::HashSet<String>,
     pub registry: Registry,
     pub selected: usize,
@@ -41,6 +47,11 @@ pub struct State {
 impl Default for State {
     fn default() -> Self {
         let mut state = Self {
+            presentation: Default::default(),
+            ui: Default::default(),
+            scene: Default::default(),
+            mesh: None,
+            presentation_loaded: false,
             held: Default::default(),
             registry: Registry::default(),
             selected: 0,

@@ -6,6 +6,10 @@ fn valorant_unload(game: &mut crate::game::Game<'_>) {
     }
     if let Ok(mut s) = valorant_horizon_engine::state().lock() {
         s.snapshot = None;
+        s.scene.clear();
+        s.mesh = None;
+        s.ui = Default::default();
+        s.rebind = None;
         s.held.clear();
         s.pending_equipped = None;
         s.heartbeat = 0;
