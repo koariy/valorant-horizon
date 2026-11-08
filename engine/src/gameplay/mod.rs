@@ -140,6 +140,9 @@ pub trait World {
     fn effect(&mut self, _target: Entity, _name: &str, _ticks: u32, _amplifier: u8) -> bool {
         false
     }
+    fn single_hit_shield(&self, _owner: u128) -> bool {
+        false
+    }
     fn status_immune(&self, _target: Entity) -> bool {
         false
     }

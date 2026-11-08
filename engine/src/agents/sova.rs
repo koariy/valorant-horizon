@@ -384,7 +384,12 @@ impl Sova {
                         .iter_mut()
                         .filter(|o| o.hit(from, to, 0.8).is_some())
                     {
-                        o.damage(self.settings.fury_damage, Some(Entity::Player(owner)), from);
+                        o.damage_with(
+                            self.settings.fury_damage,
+                            Some(Entity::Player(owner)),
+                            from,
+                            crate::gameplay::objects::UtilityCause::Shot,
+                        );
                     }
                     if c.beams.len() >= recon::MAX_BEAMS {
                         c.beams.remove(0);

@@ -112,7 +112,15 @@ pub fn intercept(
     shot: Shot,
 ) -> bool {
     let limit = super::shields::impact_limit(w, shot.from, shot.to, shot.padding);
-    if let Some(hit) = utility_hit(shields, walls, objects, shot.from, shot.to, limit) {
+    if let Some(hit) = utility_hit(
+        shields,
+        walls,
+        objects,
+        shot.from,
+        shot.to,
+        limit,
+        shot.attacker,
+    ) {
         apply_utility(
             hit.hit,
             shields,
@@ -145,6 +153,7 @@ pub fn utility_hit(
     from: V3,
     to: V3,
     limit: f64,
+    attacker: Option<Entity>,
 ) -> Option<UtilityCollision> {
     let mut nearest = None;
     let mut boundary = limit;
@@ -175,7 +184,7 @@ pub fn utility_hit(
         .enumerate()
         .filter(|(_, o)| o.health > 0. && o.ticks > 0)
     {
-        if let Some(t) = o.hit(from, to, 0.08)
+        if let Some(t) = o.hit_by(from, to, 0.08, attacker)
             && t < boundary
         {
             boundary = t;
@@ -196,7 +205,9 @@ pub fn apply_utility(
     from: V3,
 ) {
     match hit {
-        UtilityHit::Object(i) => objects[i].damage(damage, attacker, from),
+        UtilityHit::Object(i) => {
+            objects[i].damage_with(damage, attacker, from, super::objects::UtilityCause::Shot)
+        }
         UtilityHit::Shield(i) => shields[i].damage(damage),
         UtilityHit::Divide => {}
     }

@@ -134,6 +134,9 @@ impl Session {
         }
         let actors = w.actors();
         for (owner, target) in w.hit_credits() {
+            if let Some(p) = self.players.get_mut(&owner) {
+                p.extra.damage(p.agent, target);
+            }
             if let Some(p) = self.players.get_mut(&owner).filter(|p| p.agent == 10) {
                 p.clove.damage(target);
             }
@@ -147,6 +150,7 @@ impl Session {
             }
             if !self.credited.contains(&target) {
                 for (id, p) in &mut self.players {
+                    p.extra.fallen(p.agent, target, at, *id == owner);
                     if p.agent == 10 {
                         p.clove.fallen(target, *id == owner);
                     }
@@ -223,6 +227,7 @@ impl Session {
                             vision: &mut self.vision,
                             corpses: &mut self.corpses,
                             kills: &mut self.extra_kills,
+                            vulnerable: &mut self.vulnerable,
                             shields: &mut self.shields,
                             divides: &self.divides,
                             decay: self.decay_loaded.then_some(&mut self.decay),
@@ -372,6 +377,7 @@ impl Session {
                                 vision: &mut self.vision,
                                 corpses: &mut self.corpses,
                                 kills: &mut self.extra_kills,
+                                vulnerable: &mut self.vulnerable,
                                 shields: &mut self.shields,
                                 divides: &self.divides,
                                 decay: self.decay_loaded.then_some(&mut self.decay),
@@ -452,6 +458,7 @@ impl Session {
                         vision: &mut self.vision,
                         corpses: &mut self.corpses,
                         kills: &mut self.extra_kills,
+                        vulnerable: &mut self.vulnerable,
                         shields: &mut self.shields,
                         divides: &self.divides,
                         decay: self.decay_loaded.then_some(&mut self.decay),
@@ -523,6 +530,7 @@ impl Session {
                                 vision: &mut self.vision,
                                 corpses: &mut self.corpses,
                                 kills: &mut self.extra_kills,
+                                vulnerable: &mut self.vulnerable,
                                 shields: &mut self.shields,
                                 divides: &self.divides,
                                 decay: self.decay_loaded.then_some(&mut self.decay),
@@ -642,6 +650,7 @@ impl Session {
                         vision: &mut self.vision,
                         corpses: &mut self.corpses,
                         kills: &mut self.extra_kills,
+                        vulnerable: &mut self.vulnerable,
                         shields: &mut self.shields,
                         divides: &self.divides,
                         decay: self.decay_loaded.then_some(&mut self.decay),
@@ -667,7 +676,9 @@ impl Session {
                 }
             };
             p.error = (!okay).then(|| {
-                if p.agent == 10 && matches!(r.action, Action::Activate(3)) {
+                if p.agent==16 && matches!(r.action,Action::Activate(3)) {
+                    "Kill Contract unavailable: isolated arena/return/inventory integration required".into()
+                }else if p.agent == 10 && matches!(r.action, Action::Activate(3)) {
                     "Not Dead Yet unavailable: respawn/inventory/Hardcore integration required"
                         .into()
                 } else if p.agent == 1 && matches!(r.action, Action::Activate(3)) {
@@ -723,6 +734,7 @@ impl Session {
                             vision: &mut self.vision,
                             corpses: &mut self.corpses,
                             kills: &mut self.extra_kills,
+                            vulnerable: &mut self.vulnerable,
                             shields: &mut self.shields,
                             divides: &self.divides,
                             decay: self.decay_loaded.then_some(&mut self.decay),
@@ -871,7 +883,11 @@ impl Session {
         }
         self.objects.retain(|o| {
             o.ticks > 0
-                && (o.health > 0.0 || matches!(o.kind, objects::ObjectKind::Echo))
+                && (o.health > 0.0
+                    || matches!(
+                        o.kind,
+                        objects::ObjectKind::Echo | objects::ObjectKind::IsoOrb
+                    ))
                 && (!o.kind.is_advanced()
                     || self
                         .players
@@ -1717,21 +1733,22 @@ impl Session {
                 .objects
                 .iter()
                 .filter(|o| {
-                    !matches!(
-                        o.kind,
-                        objects::ObjectKind::Trapwire | objects::ObjectKind::DormantEcho
-                    ) || o.owner == id
-                        || self.viewers.get(&o.owner).is_some_and(|v| v.contains(&id))
-                        || self.positions.get(&Entity::Player(id)).is_some_and(|p| {
-                            distance(
-                                *p,
-                                if matches!(o.kind, objects::ObjectKind::Trapwire) {
-                                    scale(add(o.position, o.velocity), 0.5)
-                                } else {
-                                    o.position
-                                },
-                            ) <= 3.
-                        })
+                    (!matches!(o.kind, objects::ObjectKind::IsoOrb) || o.owner == id)
+                        && (!matches!(
+                            o.kind,
+                            objects::ObjectKind::Trapwire | objects::ObjectKind::DormantEcho
+                        ) || o.owner == id
+                            || self.viewers.get(&o.owner).is_some_and(|v| v.contains(&id))
+                            || self.positions.get(&Entity::Player(id)).is_some_and(|p| {
+                                distance(
+                                    *p,
+                                    if matches!(o.kind, objects::ObjectKind::Trapwire) {
+                                        scale(add(o.position, o.velocity), 0.5)
+                                    } else {
+                                        o.position
+                                    },
+                                ) <= 3.
+                            }))
                 })
                 .cloned()
                 .chain(

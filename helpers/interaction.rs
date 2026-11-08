@@ -79,11 +79,17 @@ fn valorant_fire(
                 game.remote_object_hit(true)
                     .map_or(1.0, |h| h.distance / 3.0),
             );
-        s.objects
-            .iter()
-            .any(|o| o.health > 0. && o.hit(from, end, 0.).is_some_and(|t| t < wall))
+        s.objects.iter().any(|o| {
+            o.health > 0.
+                && o.kind.damageable()
+                && !matches!(
+                    o.kind,
+                    valorant_horizon_engine::gameplay::objects::ObjectKind::IsoOrb
+                )
+                && o.hit(from, end, 0.).is_some_and(|t| t < wall)
+        })
     });
-    if (equipped || object) && (button == 0 || button == 1) {
+    if (equipped || object && button == 0) && (button == 0 || button == 1) {
         *canceled = true;
         *swing_hand = false;
         game.vh_send(Action::Fire(button == 1));

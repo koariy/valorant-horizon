@@ -570,6 +570,18 @@ impl World for Bridge<'_, '_> {
     fn effect(&mut self, target: Entity, name: &str, ticks: u32, amplifier: u8) -> bool {
         self.apply_status(target, name, ticks, amplifier, true)
     }
+    fn single_hit_shield(&self, owner: u128) -> bool {
+        self.0
+            .native_server_players()
+            .iter()
+            .find(|p| p.uuid == owner)
+            .is_some_and(|p| {
+                effects::protections()
+                    .lock()
+                    .ok()
+                    .is_some_and(|all| all.get(&p.entity_id).is_some_and(|p| p.one_hit))
+            })
+    }
     fn status_immune(&self, target: Entity) -> bool {
         let Entity::Player(id) = target else {
             return false;
@@ -597,8 +609,7 @@ impl World for Bridge<'_, '_> {
             && let Ok(mut all) = effects::protections().lock()
         {
             state.health = p.health;
-            state.requested =
-                state.returning && all.get(&p.entity_id).is_some_and(|old| old.requested);
+            let state = effects::merge_protection(all.get(&p.entity_id).copied(), state);
             all.insert(p.entity_id, state);
         }
     }

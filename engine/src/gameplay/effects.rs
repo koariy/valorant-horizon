@@ -13,6 +13,8 @@ pub struct Vision {
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Protection {
     pub health: f32,
+    pub one_hit: bool,
+    pub shield_epoch: u64,
     pub invulnerable: bool,
     pub disarmed: bool,
     pub returning: bool,
@@ -61,4 +63,15 @@ pub fn hostile_status(name: &str) -> bool {
             | "minecraft:poison"
             | "minecraft:wither"
     )
+}
+
+/// A repeated tick must not restore a consumed shield of the same grant.
+/// A fresh orb increments shield_epoch; returning's lethal latch is separate.
+pub fn merge_protection(old: Option<Protection>, mut next: Protection) -> Protection {
+    if next.one_hit && old.is_some_and(|old| old.shield_epoch == next.shield_epoch && !old.one_hit)
+    {
+        next.one_hit = false;
+    }
+    next.requested = next.returning && old.is_some_and(|old| old.requested);
+    next
 }

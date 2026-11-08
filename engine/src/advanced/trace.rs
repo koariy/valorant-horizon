@@ -44,9 +44,15 @@ impl<W: World> Context<'_, W> {
                 target = Some(a.entity);
             }
         }
-        if let Some(hit) =
-            projectiles::utility_hit(self.shields, self.divides, self.objects, from, to, boundary)
-        {
+        if let Some(hit) = projectiles::utility_hit(
+            self.shields,
+            self.divides,
+            self.objects,
+            from,
+            to,
+            boundary,
+            Some(Entity::Player(owner)),
+        ) {
             boundary = hit.time;
             projectiles::apply_utility(
                 hit.hit,

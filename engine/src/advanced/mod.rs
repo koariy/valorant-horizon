@@ -1,6 +1,7 @@
 //! Additional kits share the existing authoritative World and resource pools.
 pub mod cypher;
 pub mod fade;
+pub mod iso;
 pub mod neon;
 mod trace;
 pub mod walking;
@@ -112,6 +113,7 @@ pub struct Context<'a, W: World> {
     pub vision: &'a mut std::collections::HashMap<u128, effects::Vision>,
     pub corpses: &'a mut Vec<Corpse>,
     pub kills: &'a mut Vec<(u128, Entity)>,
+    pub vulnerable: &'a mut std::collections::HashMap<Entity, u32>,
     pub shields: &'a mut Vec<shields::Shield>,
     pub divides: &'a [divide::Divide],
     pub decay: Option<&'a mut std::collections::HashMap<Entity, toxin::Decay>>,
@@ -379,6 +381,8 @@ pub trait Agent {
     fn busy(&self) -> bool {
         self.core().busy()
     }
+    fn damage(&mut self, _target: Entity) {}
+    fn fallen(&mut self, _target: Entity, _at: V3, _own: bool) {}
     fn kill(&mut self) {}
     fn equipped(&self) -> bool {
         self.core().equipped.is_some() || self.camera().is_some()
@@ -402,6 +406,8 @@ macro_rules! kits{($(($index:literal,$field:ident,$name:literal,$ty:path)),+ $(,
  pub fn zone_active(&self,i:usize,kind:zones::ZoneKind)->bool{match i{$($index=>self.$field.zone_active(kind),)+_=>false}}
  pub fn trails(&self,i:usize)->Vec<Beam>{match i{$($index=>self.$field.trails(),)+_=>vec![]}}
  pub fn stats(&self,i:usize)->[u32;4]{match i{$($index=>self.$field.stats(),)+_=>[0;4]}}
+ pub fn damage(&mut self,i:usize,target:Entity){match i{$($index=>self.$field.damage(target),)+_=>{}}}
+ pub fn fallen(&mut self,i:usize,target:Entity,at:V3,own:bool){match i{$($index=>self.$field.fallen(target,at,own),)+_=>{}}}
  pub fn kill(&mut self,i:usize){match i{$($index=>self.$field.kill(),)+_=>{}}}
  pub fn activate(&mut self,i:usize,slot:usize,a:&Actor,c:&mut Context<'_,impl World>)->bool{match i{$($index=>self.$field.activate(slot,a,c),)+_=>false}}
  pub fn fire(&mut self,i:usize,alt:bool,a:&Actor,c:&mut Context<'_,impl World>)->bool{match i{$($index=>self.$field.fire(alt,a,c),)+_=>false}}
@@ -415,4 +421,5 @@ kits!(
     (13, fade, "Fade", fade::Fade),
     (14, neon, "Neon", neon::Neon),
     (15, yoru, "Yoru", yoru::Yoru),
+    (16, iso, "Iso", iso::Iso),
 );

@@ -1,6 +1,6 @@
 [mod]
 id = "valorant_horizon"
-version = "0.4.0-dev.4"
+version = "0.4.0-dev.5"
 
 [compatibility]
 horizon_revision = "41f822b659789780f58d32c63ddfb6887ea1b8bf"
@@ -220,6 +220,7 @@ bindings=[
  {name="damage_type",ty="&str",value="damage_type"},
  {name="causing",ty="i32",value="causing"},
  {name="direct",ty="i32",value="direct"},
+ {name="amount",ty="f32",value="*amount"},
  {name="canceled",ty="&mut bool",value="canceled"},
 ]
 

@@ -220,6 +220,50 @@ impl Game<'_> {
                 projectiles::beam,
                 smoke::orb,
             };
+            if matches!(object.kind, K::EnergyWall) {
+                let normal =
+                    valorant_horizon_engine::gameplay::geometry::horizontal(object.velocity);
+                let side = [-normal[2] * 2., 0., normal[0] * 2.];
+                let p = [
+                    sub(object.position, side),
+                    add(sub(object.position, side), [0., 3., 0.]),
+                    add(add(object.position, side), [0., 3., 0.]),
+                    add(object.position, side),
+                ]
+                .map(|p| sub(p, draw.camera).map(|v| v as f32));
+                self.native_world_quad(
+                    draw,
+                    "horizon/white",
+                    p,
+                    [0., 0., 16., 16.],
+                    [130, 60, 225, 140],
+                );
+                self.native_world_quad(
+                    draw,
+                    "horizon/white",
+                    [p[3], p[2], p[1], p[0]],
+                    [0., 0., 16., 16.],
+                    [130, 60, 225, 140],
+                );
+                continue;
+            }
+            if matches!(object.kind, K::IsoOrb | K::IsoAura) {
+                if object.health <= 0. {
+                    continue;
+                }
+                let aura = matches!(object.kind, K::IsoAura);
+                let center = add(object.position, [0., if aura { 0.9 } else { 0.2 }, 0.]);
+                for q in orb(sub(center, draw.camera), if aura { 1.1 } else { 0.2 }) {
+                    self.native_world_quad(
+                        draw,
+                        "horizon/white",
+                        q,
+                        [0., 0., 16., 16.],
+                        [160, 70, 240, if aura { 95 } else { 240 }],
+                    );
+                }
+                continue;
+            }
             if matches!(object.kind, K::Echo) {
                 if object.health <= 0. {
                     continue;
@@ -375,6 +419,12 @@ impl Game<'_> {
                     quad,
                     [0.0, 0.0, 16.0, 16.0],
                     match object.kind {
+                        valorant_horizon_engine::gameplay::objects::ObjectKind::IsoOrb
+                        | valorant_horizon_engine::gameplay::objects::ObjectKind::IsoAura
+                        | valorant_horizon_engine::gameplay::objects::ObjectKind::Undercut
+                        | valorant_horizon_engine::gameplay::objects::ObjectKind::EnergyWall => {
+                            [145, 65, 235, 180]
+                        }
                         valorant_horizon_engine::gameplay::objects::ObjectKind::Echo
                         | valorant_horizon_engine::gameplay::objects::ObjectKind::DormantEcho
                         | valorant_horizon_engine::gameplay::objects::ObjectKind::Gatecrash

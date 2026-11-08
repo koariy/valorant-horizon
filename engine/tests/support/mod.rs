@@ -20,8 +20,10 @@ pub fn actor(id: u128, p: V3) -> Actor {
     }
 }
 pub struct TestWorld {
+    pub vulnerable_targets: std::collections::HashSet<Entity>,
     pub protections: std::collections::HashMap<u128, effects::Protection>,
     pub teleports: std::collections::HashMap<Entity, u64>,
+    pub credits: Vec<(u128, Entity)>,
     pub intel: std::collections::HashMap<u128, Vec<u128>>,
     pub unloaded_z: Option<i32>,
     pub actors: Vec<Actor>,
@@ -40,8 +42,10 @@ pub struct TestWorld {
 impl Default for TestWorld {
     fn default() -> Self {
         Self {
+            vulnerable_targets: Default::default(),
             protections: Default::default(),
             teleports: Default::default(),
+            credits: Default::default(),
             intel: Default::default(),
             unloaded_z: None,
             blocks: Default::default(),
@@ -59,6 +63,9 @@ impl Default for TestWorld {
     }
 }
 impl World for TestWorld {
+    fn hit_credits(&mut self) -> Vec<(u128, Entity)> {
+        std::mem::take(&mut self.credits)
+    }
     fn intel_viewers(&self, owner: u128) -> Vec<u128> {
         self.intel.get(&owner).cloned().unwrap_or(vec![owner])
     }
@@ -196,7 +203,11 @@ impl World for TestWorld {
         true
     }
     fn protect(&mut self, id: u128, p: effects::Protection) {
+        let p = effects::merge_protection(self.protections.get(&id).copied(), p);
         self.protections.insert(id, p);
+    }
+    fn single_hit_shield(&self, owner: u128) -> bool {
+        self.protections.get(&owner).is_some_and(|p| p.one_hit)
     }
     fn status_immune(&self, target: Entity) -> bool {
         match target {
@@ -210,6 +221,13 @@ impl World for TestWorld {
         }
         self.effects.push((t, name.into()));
         true
+    }
+    fn vulnerability(&mut self, target: Entity, active: bool) {
+        if active {
+            self.vulnerable_targets.insert(target);
+        } else {
+            self.vulnerable_targets.remove(&target);
+        }
     }
     fn return_requested(&self, _: u128) -> bool {
         self.requested

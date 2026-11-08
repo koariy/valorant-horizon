@@ -443,7 +443,7 @@ mod native_helpers {
         valorant_phase_names_enable(v)
     }
     pub fn damage(entity: i32, ty: &str, causing: i32, direct: i32, c: &mut bool) {
-        valorant_protection(entity, ty, causing, direct, c)
+        valorant_protection(entity, ty, causing, direct, 4., c)
     }
     pub fn hidden(v: bool, id: u32) -> bool {
         valorant_phase_hide(v, id)

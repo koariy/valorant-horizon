@@ -50,13 +50,14 @@ pub fn apply(w: &mut impl World, objects: &mut Vec<Object>, e: Explosion) -> Vec
         let point = add(o.position, [0.0, 0.2, 0.0]);
         let d = distance(e.position, point);
         if d < e.radius && block_hit(w, e.position, point, 0.0).is_none() {
-            o.damage(
+            o.damage_with(
                 e.damage * (1.0 - d / e.radius) as f32,
                 Some(Entity::Player(e.owner)),
                 e.position,
+                UtilityCause::Explosion,
             );
         }
     }
-    objects.retain(|o| o.health > 0.0 || matches!(o.kind, ObjectKind::Echo));
+    objects.retain(|o| o.health > 0.0 || o.pending_damage_event());
     kills
 }
