@@ -18,14 +18,16 @@ fn maximal_snapshot_fits_native_payload_budget() {
         };
         16
     ];
-    p.error = Some("Ability unavailable, obstructed, or agent not implemented".into());
+    p.error = Some(
+        "Kill Contract unavailable: isolated arena/return/inventory integration required".into(),
+    );
     s.players.insert(u128::MAX, p);
     s.objects = vec![
         Object {
             last_hit: None,
             id: u64::MAX,
             owner: u128::MAX,
-            kind: ObjectKind::ReconBolt,
+            kind: ObjectKind::LightCluster,
             position: at,
             health: 6.,
             ticks: u32::MAX,

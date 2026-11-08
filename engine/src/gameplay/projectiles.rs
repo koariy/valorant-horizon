@@ -33,6 +33,7 @@ pub struct Projectile {
     pub velocity: V3,
     #[serde(rename = "t", alias = "ticks")]
     pub ticks: u32,
+    #[serde(rename = "g", alias = "guided")]
     pub guided: bool,
     #[serde(skip)]
     pub victims: Vec<Entity>,

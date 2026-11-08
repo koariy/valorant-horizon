@@ -2,6 +2,9 @@ use super::{geometry::*, *};
 use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum ObjectKind {
+    LightCluster,
+    LightBeacon,
+    LightPath,
     IsoOrb,
     IsoAura,
     Undercut,
@@ -43,6 +46,7 @@ pub struct Object {
     pub ticks: u32,
     #[serde(rename = "v", alias = "velocity")]
     pub velocity: V3,
+    #[serde(rename = "g", alias = "target")]
     pub target: Option<Entity>,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -62,7 +66,10 @@ impl ObjectKind {
     pub fn damageable(self) -> bool {
         !matches!(
             self,
-            Self::RelayBolt
+            Self::LightCluster
+                | Self::LightBeacon
+                | Self::LightPath
+                | Self::RelayBolt
                 | Self::Blindside
                 | Self::DormantEcho
                 | Self::IsoAura
@@ -73,7 +80,10 @@ impl ObjectKind {
     pub fn is_advanced(self) -> bool {
         matches!(
             self,
-            Self::Trapwire
+            Self::LightCluster
+                | Self::LightBeacon
+                | Self::LightPath
+                | Self::Trapwire
                 | Self::Spycam
                 | Self::CageDevice
                 | Self::HauntOrb
@@ -196,7 +206,12 @@ impl Object {
             };
         }
         let (width, height) = match self.kind {
-            ObjectKind::Trapwire | ObjectKind::Spycam | ObjectKind::CageDevice => (0.12, 0.25),
+            ObjectKind::LightCluster
+            | ObjectKind::LightBeacon
+            | ObjectKind::LightPath
+            | ObjectKind::Trapwire
+            | ObjectKind::Spycam
+            | ObjectKind::CageDevice => (0.12, 0.25),
             ObjectKind::HauntOrb
             | ObjectKind::SeizeOrb
             | ObjectKind::Haunt

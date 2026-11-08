@@ -5,6 +5,7 @@ pub mod iso;
 pub mod neon;
 mod trace;
 pub mod walking;
+pub mod waylay;
 pub mod yoru;
 use crate::{
     abilities::{Ability, Runtime},
@@ -185,6 +186,43 @@ impl<W: World> Context<'_, W> {
         if h.killed && self.kills.len() < 128 {
             self.kills.push((owner, target));
         }
+    }
+    /// Swept real-player volume against living actors; no tunnelling during dash/return.
+    pub fn body_blocked(&mut self, a: &Actor, delta: V3) -> bool {
+        let lower = sub(a.position, a.bounds.min);
+        let upper = sub(a.bounds.max, a.position);
+        for target in self.actors {
+            if self.budget.actors == 0 {
+                return true;
+            }
+            self.budget.actors -= 1;
+            if target.entity == a.entity
+                || !target.eligible
+                || target.health <= 0.
+                || self.world.status_immune(target.entity)
+            {
+                continue;
+            }
+            let minkowski = Box3 {
+                min: sub(target.bounds.min, upper),
+                max: add(target.bounds.max, lower),
+            };
+            if minkowski
+                .segment(a.position, add(a.position, delta))
+                .is_some()
+            {
+                return true;
+            }
+        }
+        false
+    }
+    pub fn hinder(&mut self, target: Entity, ticks: u32) {
+        if self.world.status_immune(target) {
+            return;
+        }
+        self.world.effect(target, "minecraft:slowness", ticks, 4);
+        self.world
+            .effect(target, "minecraft:mining_fatigue", ticks, 4);
     }
     pub fn concuss(&mut self, target: Entity, ticks: u32) {
         self.world.effect(target, "minecraft:slowness", ticks, 4);
@@ -422,4 +460,5 @@ kits!(
     (14, neon, "Neon", neon::Neon),
     (15, yoru, "Yoru", yoru::Yoru),
     (16, iso, "Iso", iso::Iso),
+    (17, waylay, "Waylay", waylay::Waylay),
 );

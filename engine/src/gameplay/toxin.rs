@@ -5,8 +5,11 @@ use std::collections::HashMap;
 pub const MAX_FIELDS: usize = 8;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Field {
+    #[serde(rename = "o", alias = "owner")]
     pub owner: u128,
+    #[serde(rename = "b", alias = "bounds")]
     pub bounds: Box3,
+    #[serde(rename = "s", alias = "sphere")]
     pub sphere: bool,
 }
 impl Field {

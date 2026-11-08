@@ -169,6 +169,12 @@ impl State {
             lines.push(info.clone());
         }
         if let Some(snapshot) = &self.snapshot {
+            if self.selected == 17 {
+                lines.push(format!(
+                    "Dash legs: {} | Refract: {} | returning: {} | boost: {}",
+                    snapshot.kit[0], snapshot.kit[1], snapshot.kit[2], snapshot.kit[3]
+                ));
+            }
             if self.selected == 16 {
                 lines.push(format!(
                     "Focus: {} | flow: {} | shield: {} | orbs: {}",

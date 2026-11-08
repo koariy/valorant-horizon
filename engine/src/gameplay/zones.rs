@@ -23,6 +23,7 @@ pub enum ZoneKind {
 pub struct Zone {
     #[serde(rename = "o")]
     pub owner: u128,
+    #[serde(rename = "k", alias = "kind")]
     pub kind: ZoneKind,
     #[serde(rename = "b", alias = "bounds")]
     pub bounds: Box3,

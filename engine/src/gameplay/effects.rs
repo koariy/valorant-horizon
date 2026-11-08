@@ -60,6 +60,7 @@ pub fn hostile_status(name: &str) -> bool {
         "minecraft:blindness"
             | "minecraft:slowness"
             | "minecraft:weakness"
+            | "minecraft:mining_fatigue"
             | "minecraft:poison"
             | "minecraft:wither"
     )

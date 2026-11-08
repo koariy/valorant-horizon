@@ -220,6 +220,48 @@ impl Game<'_> {
                 projectiles::beam,
                 smoke::orb,
             };
+            if matches!(object.kind, K::LightCluster | K::LightBeacon | K::LightPath) {
+                if matches!(object.kind, K::LightPath) {
+                    let width = ((30_f64 - f64::from(object.ticks)) / 5.).clamp(0.1, 3.);
+                    for q in beam(
+                        sub(object.position, draw.camera),
+                        sub(object.velocity, draw.camera),
+                        width,
+                    ) {
+                        self.native_world_quad(
+                            draw,
+                            "horizon/white",
+                            q,
+                            [0., 0., 16., 16.],
+                            [250, 220, 140, 100],
+                        );
+                    }
+                    let b = valorant_horizon_engine::gameplay::geometry::Box3 {
+                        min: add(object.position, [-0.3, -0.8, -0.15]),
+                        max: add(object.position, [0.3, 1., 0.15]),
+                    };
+                    for q in valorant_horizon_engine::gameplay::zones::box_quads(b, draw.camera) {
+                        self.native_world_quad(
+                            draw,
+                            "horizon/white",
+                            q,
+                            [0., 0., 16., 16.],
+                            [255, 230, 185, 170],
+                        );
+                    }
+                } else {
+                    for q in orb(sub(add(object.position, [0., 0.15, 0.]), draw.camera), 0.22) {
+                        self.native_world_quad(
+                            draw,
+                            "horizon/white",
+                            q,
+                            [0., 0., 16., 16.],
+                            [255, 230, 160, 230],
+                        );
+                    }
+                }
+                continue;
+            }
             if matches!(object.kind, K::EnergyWall) {
                 let normal =
                     valorant_horizon_engine::gameplay::geometry::horizontal(object.velocity);
@@ -419,6 +461,12 @@ impl Game<'_> {
                     quad,
                     [0.0, 0.0, 16.0, 16.0],
                     match object.kind {
+                        valorant_horizon_engine::gameplay::objects::ObjectKind::LightCluster
+                        | valorant_horizon_engine::gameplay::objects::ObjectKind::LightBeacon
+                        | valorant_horizon_engine::gameplay::objects::ObjectKind::LightPath => {
+                            [255, 230, 160, 200]
+                        }
+
                         valorant_horizon_engine::gameplay::objects::ObjectKind::IsoOrb
                         | valorant_horizon_engine::gameplay::objects::ObjectKind::IsoAura
                         | valorant_horizon_engine::gameplay::objects::ObjectKind::Undercut
