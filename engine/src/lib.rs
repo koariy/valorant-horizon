@@ -169,6 +169,9 @@ impl State {
             lines.push(info.clone());
         }
         if let Some(snapshot) = &self.snapshot {
+            if snapshot.detained > 0 {
+                lines.push(format!("DETAINED {:.1}s", snapshot.detained as f32 / 20.));
+            }
             if snapshot.suppressed > 0 {
                 lines.push(format!(
                     "SUPPRESSED {:.1}s",
@@ -179,6 +182,12 @@ impl State {
                 lines.push(format!(
                     "Hold R to stabilize ally | {} ticks",
                     snapshot.stabilizing
+                ));
+            }
+            if self.selected == 21 {
+                lines.push(format!(
+                    "Globules: {} | reclaim: {} | Thrash reclaims: {}/1 | control: {}",
+                    snapshot.kit[0], snapshot.kit[1], snapshot.kit[2], snapshot.kit[3]
                 ));
             }
             if self.selected == 20 {

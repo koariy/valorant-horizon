@@ -159,6 +159,7 @@ impl Session {
             state.disarmed = false;
             w.protect(*id, state);
         }
+        control::reset_interactions(&self.controls, w);
         control::tick(&mut self.controls);
         for (entity, state) in &mut self.controls {
             if state.blocked() && !state.applied {
@@ -387,7 +388,14 @@ impl Session {
                 continue;
             }
             if self.controls.get(&a.entity).is_some_and(|s| s.blocked()) && !passive {
-                p.error = Some("Abilities suppressed".into());
+                p.error = Some(
+                    if self.controls.get(&a.entity).is_some_and(|c| c.detained > 0) {
+                        "Detained: abilities and interactions disabled"
+                    } else {
+                        "Abilities suppressed"
+                    }
+                    .into(),
+                );
                 continue;
             }
             if w.protection_state(id).downed && !passive {
@@ -504,9 +512,9 @@ impl Session {
                     p.jett.guiding = false;
                     true
                 }
-                Action::Release(4) if p.agent >= 12 => p.extra.release(
+                Action::Release(slot @ (4 | 5)) if p.agent >= 12 => p.extra.release(
                     p.agent,
-                    4,
+                    slot,
                     a,
                     &mut crate::advanced::Context {
                         world: w,
@@ -742,8 +750,13 @@ impl Session {
                     true
                 }
             };
+            if p.agent >= 12 {
+                w.protect(id, p.extra.protection(p.agent, a));
+            }
             p.error = (!okay).then(|| {
-                if p.agent==16 && matches!(r.action,Action::Activate(3)) {
+                if p.agent==21 && matches!(r.action,Action::Fire(true)) && p.extra.gekko.core.equipped==Some(1) {
+                    "Wingman Spike actions are excluded from this ordinary-world mod".into()
+                } else if p.agent==16 && matches!(r.action,Action::Activate(3)) {
                     "Kill Contract unavailable: isolated arena/return/inventory integration required".into()
                 }else if p.agent == 10 && matches!(r.action, Action::Activate(3)) {
                     "Not Dead Yet unavailable: respawn/inventory/Hardcore integration required"
@@ -782,6 +795,13 @@ impl Session {
             if let Entity::Player(id) = a.entity
                 && let Some(p) = self.players.get_mut(&id)
             {
+                if let Some(state) = self.controls.get_mut(&a.entity)
+                    && state.blocked()
+                    && !state.applied
+                {
+                    p.suppress();
+                    state.applied = true;
+                }
                 p.strike_delay = p.strike_delay.saturating_sub(1);
                 if p.agent >= 12 {
                     p.extra.tick(
@@ -953,6 +973,7 @@ impl Session {
                 }
             }
         }
+        control::apply(&self.controls, w, &actors);
         self.tick_stabilization(w, &actors);
         self.objects.retain(|o| {
             o.ticks > 0
@@ -989,6 +1010,7 @@ impl Session {
         self.smokes.retain(|s| s.ticks > 0);
         for v in self.vision.values_mut() {
             v.flash = v.flash.saturating_sub(1);
+            v.splash = v.splash.saturating_sub(1);
             v.nearsight = v.nearsight.saturating_sub(1);
             v.deafen = v.deafen.saturating_sub(1);
         }
@@ -1723,6 +1745,10 @@ impl Session {
             p.phoenix.slots
         };
         Some(Snapshot {
+            detained: self
+                .controls
+                .get(&Entity::Player(id))
+                .map_or(0, |c| c.detained),
             suppressed: self
                 .controls
                 .get(&Entity::Player(id))
@@ -1880,3 +1906,57 @@ impl Session {
 }
 
 pub static ACTIVE_EPOCH: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// API57 departure: capture logical pending-fatal before removing native flags.
+/// These are pure state operations; no Horizon call runs under the sessions lock.
+pub fn departed(player: u128) {
+    let mut interrupted = vec![];
+    if let Ok(mut all) = sessions().lock() {
+        for session in all.values_mut() {
+            if let Some(p) = session.players.get_mut(&player) {
+                p.cancel();
+            }
+            interrupted.extend(
+                session
+                    .stabilizers
+                    .iter()
+                    .filter(|(id, ch)| **id == player || ch.target == player)
+                    .map(|(id, _)| *id),
+            );
+            session
+                .stabilizers
+                .retain(|id, ch| *id != player && ch.target != player);
+            session
+                .stabilize_targets
+                .retain(|id, target| *id != player && *target != player);
+            session.vision.remove(&player);
+        }
+    }
+    interrupted.sort_unstable();
+    interrupted.dedup();
+    for caster in interrupted {
+        for id in combat::raw_ids(caster) {
+            if let Ok(mut all) = effects::protections().lock()
+                && let Some(p) = all.get_mut(&id)
+            {
+                p.disarmed = false;
+            }
+        }
+    }
+    let mut ids = combat::detach(player);
+    if let Ok(mut all) = effects::vulnerability_ids().lock()
+        && let Some(id) = all.remove(&Entity::Player(player))
+    {
+        ids.push(id);
+    }
+    if let Ok(mut all) = effects::protections().lock() {
+        for id in &ids {
+            all.remove(id);
+        }
+    }
+    if let Ok(mut all) = effects::vulnerable().lock() {
+        for id in ids {
+            all.remove(&id);
+        }
+    }
+}

@@ -186,6 +186,8 @@ pub struct Snapshot {
     pub agent: usize,
     pub kit: [u32; 4],
     pub suppressed: u32,
+    #[serde(default)]
+    pub detained: u32,
     pub stabilize: bool,
     pub stabilizing: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

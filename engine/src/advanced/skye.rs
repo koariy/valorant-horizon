@@ -48,12 +48,7 @@ impl Default for Settings {
         }
     }
 }
-struct Tiger {
-    camera: Camera,
-    left: u32,
-    hurt: u64,
-    leap: u32,
-}
+type Tiger = companions::Pilot;
 struct Hawk {
     object: u64,
     left: u32,
@@ -160,62 +155,21 @@ impl Skye {
         let Some(mut tiger) = self.tiger.take() else {
             return;
         };
-        tiger.left = tiger.left.saturating_sub(1);
-        if tiger.left == 0
-            || c.world.protection_state(id).hurt_epoch != tiger.hurt
-            || !tiger.camera.update(a, c, false)
-        {
-            return;
-        }
-        let Some(mut object) = c
-            .objects
-            .iter()
-            .find(|o| o.id == tiger.camera.source && o.health > 0. && o.ticks > 0)
-            .cloned()
-        else {
-            return;
-        };
-        if tiger.leap > 0 {
-            tiger.leap -= 1;
-            object.velocity[1] -= 0.07;
-            let end = add(object.position, object.velocity);
-            let hit = companions::contact(
-                c,
-                id,
-                add(object.position, [0., 0.25, 0.]),
-                add(end, [0., 0.25, 0.]),
-                0.25,
-                false,
-            );
-            object.position = add(hit.at, [0., -0.25, 0.]);
-            if hit.blocked || tiger.leap == 0 {
-                if let Some(target) = hit.target.filter(|t| c.world.recon_target(id, t.entity)) {
-                    c.hurt(id, target.entity, 6.);
+        match tiger.step(id, a, c, 0.22) {
+            companions::Drive::Moving => self.tiger = Some(tiger),
+            companions::Drive::Ended => {}
+            companions::Drive::Impact { at, target } => {
+                if let Some(target) = target.filter(|t| c.world.recon_target(id, *t)) {
+                    c.hurt(id, target, 6.);
                 }
-                for target in c.enemies(id, object.position, 3.) {
-                    if c.visible(object.position, target.eye()) {
+                for target in c.enemies(id, at, 3.) {
+                    if c.visible(at, target.eye()) {
                         c.concuss(target.entity, 40);
                     }
                 }
-                c.world.burst_fx(object.position);
-                return;
+                c.world.burst_fx(at);
             }
-        } else {
-            walking::step(
-                c.world,
-                &mut object,
-                a.movement,
-                if length(a.movement) > 0.01 { 0.22 } else { 0. },
-            );
         }
-        if distance(tiger.camera.anchor, object.position) > 28. {
-            return;
-        }
-        tiger.camera.remote.position = add(object.position, [0., 0.35, 0.]);
-        if let Some(stored) = c.objects.iter_mut().find(|o| o.id == object.id) {
-            *stored = object;
-        }
-        self.tiger = Some(tiger);
     }
     fn clear_hawk_input(&mut self) {
         if self.core.equipped == Some(2) {
@@ -291,6 +245,7 @@ impl Skye {
             });
             let Some(target) = target.filter(|t| {
                 c.world.recon_target(id, t.entity)
+                    && c.world.bot_target(id, t.entity)
                     && !c.world.status_immune(t.entity)
                     && distance(o.position, t.position) < 40.
             }) else {
@@ -383,19 +338,7 @@ impl Agent for Skye {
             return false;
         };
         if let Some(tiger) = &mut self.tiger {
-            if tiger.leap > 0 {
-                return false;
-            }
-            let Some(o) = c
-                .objects
-                .iter_mut()
-                .find(|o| o.id == tiger.camera.source && o.health > 0.)
-            else {
-                return false;
-            };
-            o.velocity = add(scale(horizontal(a.direction), 0.65), [0., 0.35, 0.]);
-            tiger.leap = 12;
-            return true;
+            return tiger.lunge(a.direction, c, 0.65, 0.35);
         }
         let Some(slot) = self.core.equipped else {
             return false;

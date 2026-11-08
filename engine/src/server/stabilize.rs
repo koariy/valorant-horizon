@@ -18,6 +18,13 @@ impl Session {
         let Entity::Player(id) = actor.entity else {
             return None;
         };
+        if self
+            .controls
+            .get(&actor.entity)
+            .is_some_and(|c| c.detained > 0)
+        {
+            return None;
+        }
         let state = w.protection_state(id);
         if !actor.eligible
             || actor.health <= 0.

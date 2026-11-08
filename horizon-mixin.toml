@@ -1,6 +1,6 @@
 [mod]
 id = "valorant_horizon"
-version = "0.4.0-dev.9"
+version = "0.4.0-dev.10"
 
 [compatibility]
 horizon_revision = "41f822b659789780f58d32c63ddfb6887ea1b8bf"
@@ -470,3 +470,11 @@ bindings=[
 {name="game",ty="&crate::game::Game<'_>",value="&*self"},
 {name="canceled",ty="&mut bool",value="canceled"},
 ]
+
+[[injection]]
+id="player_departed"
+hook="player_logged_out"
+hook_version=1
+kind="HEAD"
+helper="helpers/player_departed.rs"
+bindings=[{name="player",ty="u128",value="player"}]

@@ -124,6 +124,8 @@ fn maximal_snapshot_fits_native_payload_budget() {
     snapshot.bow_charge = Some(u32::MAX);
     snapshot.kit = [u32::MAX; 4];
     snapshot.suppressed = u32::MAX;
+    snapshot.detained = u32::MAX;
+    snapshot.vision.splash = u32::MAX;
     snapshot.stabilize = true;
     snapshot.stabilizing = u32::MAX;
     snapshot.hidden_entities = vec![u32::MAX; 64];

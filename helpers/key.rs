@@ -15,6 +15,7 @@ fn valorant_key(game: &mut crate::game::Game<'_>, key: &str, pressed: bool) {
     if !pressed {
         if key == "key.keyboard.r" {
             game.vh_send(Action::Stabilize(false));
+            game.vh_send(Action::Release(5));
         }
         if let Ok(mut s) = state().lock() {
             if key == "key.mouse.left" {

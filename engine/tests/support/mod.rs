@@ -32,6 +32,7 @@ pub struct TestWorld {
     pub decay: Vec<(Entity, toxin::Decay)>,
     pub protected: Vec<Entity>,
     pub heal_denied: Vec<Entity>,
+    pub non_hostile: Vec<Entity>,
     pub shield: f32,
     pub time: i64,
 
@@ -55,6 +56,7 @@ impl Default for TestWorld {
             decay: vec![],
             protected: vec![],
             heal_denied: vec![],
+            non_hostile: vec![],
             shield: 0.,
             time: 0,
             actors: vec![actor(1, [0.0, 1.0, 0.0]), actor(2, [1.0, 1.0, 1.0])],
@@ -78,6 +80,9 @@ impl World for TestWorld {
             Entity::Player(id) => u32::try_from(id).ok(),
             Entity::Mob(id) => Some(id),
         }
+    }
+    fn bot_target(&self, owner: u128, target: Entity) -> bool {
+        self.can_harm(owner, target) && !self.non_hostile.contains(&target)
     }
     fn can_harm(&self, _owner: u128, target: Entity) -> bool {
         !self.status_immune(target) && !self.protected.contains(&target)

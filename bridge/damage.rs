@@ -35,6 +35,7 @@ impl Game<'_> {
                             kind: match source {
                                 "minecraft:in_fire" => DamageKind::InFire,
                                 "minecraft:explosion" => DamageKind::Explosion,
+                                "minecraft:magic" => DamageKind::Magic,
                                 _ => DamageKind::Arrow,
                             },
                             attacker: Some(Who::Player),

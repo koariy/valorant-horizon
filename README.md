@@ -1,6 +1,6 @@
-# Valorant Horizon — 0.4.0-dev.9
+# Valorant Horizon — 0.4.0-dev.10
 
-Rust/.hnmod мод для обычного мира Horizon: 21 агент, серверные способности, меню, HUD и сохранение клавиш. Без раундов, Spike, экономики и обязательной зависимости от оружия. Текущий этап — Skye; механики и ограничения в `docs/SKYE.md`, результаты проверок в `verification/skye/RESULTS.md`.
+Rust/.hnmod мод для обычного мира Horizon: 22 агента, серверные способности, меню, HUD и сохранение клавиш. Без раундов, Spike, экономики и обязательной зависимости от оружия. Последний реализованный агент — Gekko; механики и ограничения в `docs/GEKKO.md`, общие результаты проверок в `verification/expansion/RESULTS.md`.
 
 Проверки выполняются в коде и нативной сборке. Игровой запуск и LAN-приёмка ещё не проведены. Sage Resurrection, Clove Not Dead Yet и Iso Kill Contract отключены до соответствующей серверной интеграции. Необязательный DeepSeek CLI: `docs/DEEPSEEK.md`; без ключа Codex работает самостоятельно.
 
@@ -10,7 +10,7 @@ Rust/.hnmod мод для обычного мира Horizon: 21 агент, се
 - horizon-mixins 0.6.0, commit `5a64af938ec86b00d53d16a408aabc0038fb3e57`.
 - Проверки выполнялись Rust 1.99.1 на Linux, без default features клиента.
 - Raw mixin targets привязаны к этим ревизиям. Другие версии не проверены.
-- API и ограничения: `docs/ABILITIES-AUDIT.md`; результаты: `verification/RESULTS.md`.
+- API и ограничения: `docs/ABILITIES-AUDIT.md`; результаты: `verification/expansion/RESULTS.md`.
 
 ## Возможности и ограничения
 
@@ -31,6 +31,7 @@ Rust/.hnmod мод для обычного мира Horizon: 21 агент, се
 | Cypher | растяжки с HP/tether/reveal, активируемые клетки, камера с дротиком, раскрытие по подтверждённой смерти | `docs/CYPHER.md` |
 | Fade | Prowler с преследованием/следами, удержание Seize, разрушаемый Haunt по LOS, Nightfall с обратимым decay и deafen | `docs/FADE.md` |
 | Neon | High Gear с энергией/slide, отражающийся Relay Bolt, две стены Fast Lane, Overdrive и восстановление по kill credit | `docs/NEON.md` |
+| Gekko | Wingman с поиском/оглушением, Dizzy с физической плазмой, Mosh Pit с уроном/взрывом, управляемый Thrash с detain, подбор существ | `docs/GEKKO.md` |
 | Skye | Regrowth с реальным пулом HP, управляемый Trailblazer/pounce, steerable hawk/flash/hit confirm, разрушаемые Seekers | `docs/SKYE.md` |
 | Breach | Aftershock/Flashpoint за выбранной стеной, заряжаемая Fault Line и расширяющийся Rolling Thunder с реальным knock-up | `docs/BREACH.md` |
 | KAY/O | FRAG/MENT с импульсами, FLASH/DRIVE, разрушаемый ZERO/POINT и общая suppression, NULL/CMD со stim/downed/стабилизацией союзником | `docs/KAYO.md` |
@@ -42,7 +43,7 @@ Resurrection требует проверенной интеграции respawn/
 
 ## Установка
 
-`dist/valorant_horizon-0.4.0-dev.9.hnmod` — исходный native bundle, для установки launcher пересобирает Horizon. Это не DLL и не Bukkit/Fabric-мод. Все участники и сервер должны использовать совместимую сборку Horizon с модом.
+`dist/valorant_horizon-0.4.0-dev.10.hnmod` — исходный native bundle, для установки launcher пересобирает Horizon. Это не DLL и не Bukkit/Fabric-мод. Все участники и сервер должны использовать совместимую сборку Horizon с модом.
 
 ```sh
 horizon-launcher settings native-profile dev
@@ -53,7 +54,7 @@ horizon-launcher native-build /absolute/path/to/valorant-horizon --instance YOUR
 
 ## Управление
 
-- V: меню; Left/Right переключают страницы по 10 агентов. На первой странице 1 Jett, 2 Sage, 3 Phoenix, 4 Omen, 5 Raze, 6 Reyna, 7 Brimstone, 8 Viper, 9 Astra, 0 Harbor; на второй 1 Clove, 2 Sova, 3 Cypher, 4 Fade, 5 Neon, 6 Yoru, 7 Iso, 8 Waylay, 9 KAY/O, 0 Breach; на третьей 1 Skye. Сохранены быстрые клавиши минус (-) Clove и = Sova. R возвращает устройства Cypher вблизи.
+- V: меню; Left/Right переключают страницы по 10 агентов. На первой странице 1 Jett, 2 Sage, 3 Phoenix, 4 Omen, 5 Raze, 6 Reyna, 7 Brimstone, 8 Viper, 9 Astra, 0 Harbor; на второй 1 Clove, 2 Sova, 3 Cypher, 4 Fade, 5 Neon, 6 Yoru, 7 Iso, 8 Waylay, 9 KAY/O, 0 Breach; на третьей 1 Skye, 2 Gekko. Сохранены быстрые клавиши минус (-) Clove и = Sova. R возвращает устройства Cypher вблизи; удержание R подбирает globule Gekko.
 - C/Q/E/X: четыре слота. В меню та же клавиша выбирает слот для переназначения, следующая клавиша сохраняется. Esc отменяет ввод.
 - ЛКМ/ПКМ: применение подготовленной способности / альтернативное применение. Особые действия описаны в документации агента.
 - B: отмена подготовки/канала, потраченные заряды не возвращаются.

@@ -26,6 +26,19 @@ fn valorant_client_tick(game: &mut crate::game::Game<'_>) {
     if stabilize {
         game.vh_send(Action::Stabilize(true));
     }
+    let reclaim = game.native_playing()
+        && state().lock().ok().is_some_and(|s| {
+            !s.menu
+                && s.selected == 21
+                && s.heartbeat % 5 == 0
+                && s.held.contains("key.keyboard.r")
+                && s.snapshot
+                    .as_ref()
+                    .is_some_and(|x| x.kit[0] > 0 && !x.stabilize)
+        });
+    if reclaim {
+        game.vh_send(Action::Recall);
+    }
     let aiming = valorant_horizon_engine::state()
         .lock()
         .ok()

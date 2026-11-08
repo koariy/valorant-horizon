@@ -3,6 +3,7 @@ pub mod breach;
 pub mod companions;
 pub mod cypher;
 pub mod fade;
+pub mod gekko;
 pub mod iso;
 pub mod kayo;
 pub mod neon;
@@ -408,6 +409,7 @@ pub trait Agent {
         self.core_mut().firing = false;
         true
     }
+    fn recall_release(&mut self) {}
     fn recall(&mut self, _a: &Actor, _c: &mut Context<'_, impl World>) -> bool {
         false
     }
@@ -465,6 +467,7 @@ macro_rules! kits{($(($index:literal,$field:ident,$name:literal,$ty:path)),+ $(,
  pub fn leave(&mut self){$(self.$field.leave();)+}
  pub fn owns(&self,i:usize,id:u64)->bool{match i{$($index=>self.$field.owns(id),)+_=>false}}
  pub fn hidden(&self,i:usize)->bool{match i{$($index=>self.$field.hidden(),)+_=>false}}
+ pub fn protection(&self,i:usize,a:&Actor)->effects::Protection{match i{$($index=>self.$field.protection(a),)+_=>effects::Protection::default()}}
  pub fn phased(&self,i:usize)->bool{match i{$($index=>self.$field.phased(),)+_=>false}}
  pub fn camera(&self,i:usize)->Option<V3>{match i{$($index=>self.$field.camera(),)+_=>None}}
  pub fn equipped(&self,i:usize)->bool{match i{$($index=>self.$field.equipped(),)+_=>false}}
@@ -476,7 +479,7 @@ macro_rules! kits{($(($index:literal,$field:ident,$name:literal,$ty:path)),+ $(,
  pub fn kill(&mut self,i:usize){match i{$($index=>self.$field.kill(),)+_=>{}}}
  pub fn activate(&mut self,i:usize,slot:usize,a:&Actor,c:&mut Context<'_,impl World>)->bool{match i{$($index=>self.$field.activate(slot,a,c),)+_=>false}}
  pub fn fire(&mut self,i:usize,alt:bool,a:&Actor,c:&mut Context<'_,impl World>)->bool{match i{$($index=>self.$field.fire(alt,a,c),)+_=>false}}
- pub fn release(&mut self,i:usize,slot:usize,a:&Actor,c:&mut Context<'_,impl World>)->bool{match i{$($index=>if slot==4{self.$field.release(a,c)}else{true},)+_=>false}}
+ pub fn release(&mut self,i:usize,slot:usize,a:&Actor,c:&mut Context<'_,impl World>)->bool{match i{$($index=>if slot==5{self.$field.recall_release();true}else if slot==4{self.$field.release(a,c)}else{true},)+_=>false}}
  pub fn recall(&mut self,i:usize,a:&Actor,c:&mut Context<'_,impl World>)->bool{match i{$($index=>self.$field.recall(a,c),)+_=>false}}
  pub fn tick(&mut self,i:usize,a:&Actor,c:&mut Context<'_,impl World>){match i{$($index=>{self.$field.core_mut().tick();if a.eligible{self.$field.tick(a,c);}else{self.$field.inactive_tick();}},)+_=>{}}if let Some(id)=owner(a){match i{$($index=>c.world.protect(id,self.$field.protection(a)),)+_=>{}}}}
  }
@@ -491,4 +494,5 @@ kits!(
     (18, kayo, "KAY/O", kayo::Kayo),
     (19, breach, "Breach", breach::Breach),
     (20, skye, "Skye", skye::Skye),
+    (21, gekko, "Gekko", gekko::Gekko),
 );

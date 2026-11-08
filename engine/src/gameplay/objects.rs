@@ -2,6 +2,15 @@ use super::{geometry::*, *};
 use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum ObjectKind {
+    Wingman,
+    Dizzy,
+    Thrash,
+    Plasma,
+    Mosh,
+    MoshPatch,
+    WingmanGlobule,
+    DizzyGlobule,
+    ThrashGlobule,
     SkyeTiger,
     SkyeHawk,
     SkyeSeeker,
@@ -75,7 +84,13 @@ impl ObjectKind {
     pub fn damageable(self) -> bool {
         !matches!(
             self,
-            Self::SeismicFront
+            Self::Plasma
+                | Self::Mosh
+                | Self::MoshPatch
+                | Self::WingmanGlobule
+                | Self::DizzyGlobule
+                | Self::ThrashGlobule
+                | Self::SeismicFront
                 | Self::WallCharge
                 | Self::Fragment
                 | Self::FlashDrive
@@ -94,7 +109,16 @@ impl ObjectKind {
     pub fn is_advanced(self) -> bool {
         matches!(
             self,
-            Self::SkyeTiger
+            Self::Wingman
+                | Self::Dizzy
+                | Self::Thrash
+                | Self::Plasma
+                | Self::Mosh
+                | Self::MoshPatch
+                | Self::WingmanGlobule
+                | Self::DizzyGlobule
+                | Self::ThrashGlobule
+                | Self::SkyeTiger
                 | Self::SkyeHawk
                 | Self::SkyeSeeker
                 | Self::SeismicFront
@@ -241,7 +265,16 @@ impl Object {
             | ObjectKind::Trapwire
             | ObjectKind::Spycam
             | ObjectKind::CageDevice => (0.12, 0.25),
-            ObjectKind::SkyeTiger
+            ObjectKind::Wingman
+            | ObjectKind::Dizzy
+            | ObjectKind::Thrash
+            | ObjectKind::Plasma
+            | ObjectKind::Mosh
+            | ObjectKind::MoshPatch
+            | ObjectKind::WingmanGlobule
+            | ObjectKind::DizzyGlobule
+            | ObjectKind::ThrashGlobule
+            | ObjectKind::SkyeTiger
             | ObjectKind::SkyeHawk
             | ObjectKind::SkyeSeeker
             | ObjectKind::HauntOrb

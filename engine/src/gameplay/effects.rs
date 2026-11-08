@@ -6,6 +6,8 @@ use std::{
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
 pub struct Vision {
     pub flash: u32,
+    #[serde(default)]
+    pub splash: u32,
     pub nearsight: u32,
     pub deafen: u32,
     pub phased: bool,

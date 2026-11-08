@@ -220,6 +220,93 @@ impl Game<'_> {
                 projectiles::beam,
                 smoke::orb,
             };
+            if matches!(
+                object.kind,
+                K::Wingman
+                    | K::Dizzy
+                    | K::Thrash
+                    | K::Plasma
+                    | K::Mosh
+                    | K::MoshPatch
+                    | K::WingmanGlobule
+                    | K::DizzyGlobule
+                    | K::ThrashGlobule
+            ) {
+                let color = match object.kind {
+                    K::Wingman | K::WingmanGlobule => [245, 205, 80, 230],
+                    K::Dizzy | K::DizzyGlobule | K::Plasma => [85, 135, 250, 230],
+                    K::Thrash | K::ThrashGlobule => [225, 110, 205, 230],
+                    _ => [95, 220, 80, 220],
+                };
+                let center = sub(add(object.position, [0., 0.2, 0.]), draw.camera);
+                if matches!(object.kind, K::MoshPatch) {
+                    let center = sub(add(object.position, [0., 0.03, 0.]), draw.camera);
+                    for n in 0..16 {
+                        let point = |i: u32| {
+                            let angle = f64::from(i) * std::f64::consts::TAU / 16.;
+                            add(center, [angle.cos() * 3.5, 0., angle.sin() * 3.5])
+                                .map(|v| v as f32)
+                        };
+                        let q = [
+                            center.map(|v| v as f32),
+                            point(n),
+                            point(n + 1),
+                            center.map(|v| v as f32),
+                        ];
+                        for q in [q, [q[3], q[2], q[1], q[0]]] {
+                            self.native_world_quad(
+                                draw,
+                                "horizon/white",
+                                q,
+                                [0., 0., 16., 16.],
+                                [95, 220, 80, if object.ticks < 10 { 160 } else { 90 }],
+                            );
+                        }
+                    }
+                } else if matches!(object.kind, K::Plasma) {
+                    for q in beam(
+                        center,
+                        add(center, scale(unit(object.velocity), -0.3)),
+                        0.06,
+                    ) {
+                        self.native_world_quad(draw, "horizon/white", q, [0., 0., 16., 16.], color);
+                    }
+                } else if matches!(object.kind, K::Wingman) {
+                    let b = valorant_horizon_engine::gameplay::geometry::Box3 {
+                        min: add(object.position, [-0.2, 0., -0.2]),
+                        max: add(object.position, [0.2, 0.5, 0.2]),
+                    };
+                    for q in valorant_horizon_engine::gameplay::zones::box_quads(b, draw.camera) {
+                        self.native_world_quad(draw, "horizon/white", q, [0., 0., 16., 16.], color);
+                    }
+                } else {
+                    for q in orb(
+                        center,
+                        if matches!(object.kind, K::Dizzy | K::Thrash) {
+                            0.32
+                        } else {
+                            0.16
+                        },
+                    ) {
+                        self.native_world_quad(draw, "horizon/white", q, [0., 0., 16., 16.], color);
+                    }
+                    if matches!(object.kind, K::Thrash) {
+                        for q in valorant_horizon_engine::gameplay::projectiles::blade(
+                            center,
+                            object.velocity,
+                        ) {
+                            self.native_world_quad(
+                                draw,
+                                "horizon/white",
+                                q,
+                                [0., 0., 16., 16.],
+                                color,
+                            );
+                        }
+                    }
+                }
+                continue;
+            }
             if matches!(object.kind, K::SkyeTiger | K::SkyeHawk | K::SkyeSeeker) {
                 if matches!(object.kind, K::SkyeTiger) {
                     let dir =
@@ -596,6 +683,8 @@ impl Game<'_> {
                     quad,
                     [0.0, 0.0, 16.0, 16.0],
                     match object.kind {
+                        valorant_horizon_engine::gameplay::objects::ObjectKind::Wingman | valorant_horizon_engine::gameplay::objects::ObjectKind::Dizzy | valorant_horizon_engine::gameplay::objects::ObjectKind::Thrash | valorant_horizon_engine::gameplay::objects::ObjectKind::Plasma | valorant_horizon_engine::gameplay::objects::ObjectKind::Mosh | valorant_horizon_engine::gameplay::objects::ObjectKind::MoshPatch | valorant_horizon_engine::gameplay::objects::ObjectKind::WingmanGlobule | valorant_horizon_engine::gameplay::objects::ObjectKind::DizzyGlobule | valorant_horizon_engine::gameplay::objects::ObjectKind::ThrashGlobule => [100,180,220,220],
+
                         valorant_horizon_engine::gameplay::objects::ObjectKind::SkyeTiger | valorant_horizon_engine::gameplay::objects::ObjectKind::SkyeHawk | valorant_horizon_engine::gameplay::objects::ObjectKind::SkyeSeeker => [150,215,65,225],
 
                         valorant_horizon_engine::gameplay::objects::ObjectKind::SeismicFront | valorant_horizon_engine::gameplay::objects::ObjectKind::WallCharge => [255,145,45,220],
@@ -867,6 +956,16 @@ impl Game<'_> {
             .lock()
             .ok()
             .and_then(|s| s.snapshot.as_ref().map(|s| s.vision));
+        if vision.is_some_and(|v| v.splash > 0) {
+            fog.color = [0.12, 0.3, 0.85, 1.];
+            fog.environmental_start = 0.;
+            fog.environmental_end = 0.02;
+            fog.render_distance_start = 0.;
+            fog.render_distance_end = 0.02;
+            fog.sky_end = 0.02;
+            fog.cloud_end = 0.02;
+            return;
+        }
         if vision.is_some_and(|v| v.flash > 0) {
             fog.color = [1.0, 0.97, 0.85, 1.0];
             fog.environmental_start = 0.0;

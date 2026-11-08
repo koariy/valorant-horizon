@@ -156,6 +156,33 @@ pub fn utility_hit(
     limit: f64,
     attacker: Option<Entity>,
 ) -> Option<UtilityCollision> {
+    utility_hit_from(
+        shields,
+        walls,
+        objects,
+        from,
+        to,
+        limit,
+        UtilitySource {
+            attacker,
+            ignore_object: None,
+        },
+    )
+}
+#[derive(Clone, Copy)]
+pub struct UtilitySource {
+    pub attacker: Option<Entity>,
+    pub ignore_object: Option<u64>,
+}
+pub fn utility_hit_from(
+    shields: &[super::shields::Shield],
+    walls: &[super::divide::Divide],
+    objects: &[super::objects::Object],
+    from: V3,
+    to: V3,
+    limit: f64,
+    source: UtilitySource,
+) -> Option<UtilityCollision> {
     let mut nearest = None;
     let mut boundary = limit;
     for d in walls.iter().filter(|d| d.ticks > 0) {
@@ -183,9 +210,9 @@ pub fn utility_hit(
     for (i, o) in objects
         .iter()
         .enumerate()
-        .filter(|(_, o)| o.health > 0. && o.ticks > 0)
+        .filter(|(_, o)| o.health > 0. && o.ticks > 0 && Some(o.id) != source.ignore_object)
     {
-        if let Some(t) = o.hit_by(from, to, 0.08, attacker)
+        if let Some(t) = o.hit_by(from, to, 0.08, source.attacker)
             && t < boundary
         {
             boundary = t;

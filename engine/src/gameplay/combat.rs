@@ -96,6 +96,27 @@ pub fn clear() {
         *s = State::default();
     }
 }
+pub fn raw_ids(player: u128) -> Vec<i32> {
+    state().lock().ok().map_or_else(Vec::new, |s| {
+        s.routes
+            .iter()
+            .filter(|(_, routes)| routes.iter().any(|(_, e)| *e == Entity::Player(player)))
+            .map(|(id, _)| *id)
+            .collect()
+    })
+}
+pub fn detach(player: u128) -> Vec<i32> {
+    let ids = raw_ids(player);
+    if let Ok(mut s) = state().lock() {
+        for routes in s.routes.values_mut() {
+            routes.retain(|(_, e)| *e != Entity::Player(player));
+        }
+        s.routes.retain(|_, routes| !routes.is_empty());
+        s.hits.retain(|hit| hit.owner != player);
+    }
+    ids
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
