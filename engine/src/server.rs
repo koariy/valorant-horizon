@@ -222,6 +222,7 @@ impl Session {
                             vision: &mut self.vision,
                             corpses: &mut self.corpses,
                             kills: &mut self.extra_kills,
+                            decay: self.decay_loaded.then_some(&mut self.decay),
                             budget: &mut self.budget,
                         },
                     );
@@ -368,6 +369,7 @@ impl Session {
                                 vision: &mut self.vision,
                                 corpses: &mut self.corpses,
                                 kills: &mut self.extra_kills,
+                                decay: self.decay_loaded.then_some(&mut self.decay),
                                 budget: &mut self.budget,
                             },
                         )
@@ -445,6 +447,7 @@ impl Session {
                         vision: &mut self.vision,
                         corpses: &mut self.corpses,
                         kills: &mut self.extra_kills,
+                        decay: self.decay_loaded.then_some(&mut self.decay),
                         budget: &mut self.budget,
                     },
                 ),
@@ -513,6 +516,7 @@ impl Session {
                                 vision: &mut self.vision,
                                 corpses: &mut self.corpses,
                                 kills: &mut self.extra_kills,
+                                decay: self.decay_loaded.then_some(&mut self.decay),
                                 budget: &mut self.budget,
                             },
                         )
@@ -629,6 +633,7 @@ impl Session {
                         vision: &mut self.vision,
                         corpses: &mut self.corpses,
                         kills: &mut self.extra_kills,
+                        decay: self.decay_loaded.then_some(&mut self.decay),
                         budget: &mut self.budget,
                     },
                 ),
@@ -707,6 +712,7 @@ impl Session {
                             vision: &mut self.vision,
                             corpses: &mut self.corpses,
                             kills: &mut self.extra_kills,
+                            decay: self.decay_loaded.then_some(&mut self.decay),
                             budget: &mut self.budget,
                         },
                     );
@@ -882,6 +888,7 @@ impl Session {
         for v in self.vision.values_mut() {
             v.flash = v.flash.saturating_sub(1);
             v.nearsight = v.nearsight.saturating_sub(1);
+            v.deafen = v.deafen.saturating_sub(1);
         }
         if self.decay_loaded {
             toxin::tick(w, &self.toxins, &mut self.decay);
@@ -890,7 +897,10 @@ impl Session {
         let mut zone_kills = Vec::new();
         for zone in &mut self.zones {
             zone.ticks = zone.ticks.saturating_sub(1);
-            if matches!(zone.kind, zones::ZoneKind::CyberCage) {
+            if matches!(
+                zone.kind,
+                zones::ZoneKind::CyberCage | zones::ZoneKind::Seize | zones::ZoneKind::Nightfall
+            ) {
                 continue;
             }
             if matches!(
@@ -992,7 +1002,18 @@ impl Session {
         for (owner, target) in zone_kills {
             self.defer_kill(w, owner, target, false);
         }
-        self.zones.retain(|z| z.ticks > 0);
+        self.zones.retain(|z| {
+            z.ticks > 0
+                && (!matches!(
+                    z.kind,
+                    zones::ZoneKind::CyberCage
+                        | zones::ZoneKind::Seize
+                        | zones::ZoneKind::Nightfall
+                ) || self
+                    .players
+                    .get(&z.owner)
+                    .is_some_and(|p| p.extra.zone_active(p.agent, z.kind)))
+        });
         w.block_arrows(&self.divides, &mut self.shields, &mut self.objects);
         let mut alive = Vec::new();
         for mut p in std::mem::take(&mut self.projectiles) {
@@ -1589,6 +1610,15 @@ impl Session {
             kit: p.extra.stats(p.agent),
             contacts: self.intel.snapshot(id),
             beams: self.beams.clone(),
+            trails: self
+                .players
+                .iter()
+                .filter(|(owner, _)| {
+                    **owner == id || self.viewers.get(owner).is_some_and(|v| v.contains(&id))
+                })
+                .flat_map(|(_, p)| p.extra.trails(p.agent))
+                .take(2)
+                .collect(),
             bow_charge: p.sova.charging,
             bounces: p.sova.bounces,
             fury_shots: p.sova.fury_shots,

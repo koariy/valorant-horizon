@@ -1,0 +1,23 @@
+{
+  "url": "https://playvalorant.com/en-us/agents/yoru/",
+  "date": "2026-11-08",
+  "html_sha256": "2f10b0d50b6f313a4a64da5f0874f6b5c6599d27ead79a477ec4f362ece3d475",
+  "abilities": [
+    {
+      "name": "BLINDSIDE",
+      "description": "EQUIP to rip an unstable dimensional fragment from reality. FIRE to throw the fragment, activating a flash that winds up once it collides with a hard surface in world."
+    },
+    {
+      "name": "GATECRASH",
+      "description": "EQUIP a rift tether FIRE to send the tether forward. ALT FIRE to place a stationary tether. ACTIVATE to teleport to the tether's location. USE to trigger a fake teleport."
+    },
+    {
+      "name": "FAKEOUT",
+      "description": "EQUIP an echo that transforms into a mirror image of Yoru when activated FIRE to instantly activate the mirror image and send it forward ALT FIRE to place an inactive echo USE to transform an inactive echo into a mirror image and send it forward.  Mirror images explode in a blinding flash when destroyed by enemies."
+    },
+    {
+      "name": "DIMENSIONAL DRIFT",
+      "description": "EQUIP a mask that can see between dimensions. FIRE to drift into Yoru's dimension, unable to be affected or seen by enemies from the outside. REACTIVATE to exit Yoru's dimension early."
+    }
+  ]
+}

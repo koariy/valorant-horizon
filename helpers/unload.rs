@@ -1,5 +1,6 @@
 fn valorant_unload(game: &mut crate::game::Game<'_>) {
     let _ = game;
+    horizon_client_render::valorant_spatial::set_deafened(false);
     if let Ok(mut d) = horizon_client_render::valorant_spatial::audio_planes().lock() {
         d.clear();
     }

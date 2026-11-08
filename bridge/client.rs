@@ -41,6 +41,7 @@ impl Game<'_> {
             if snapshot.agent >= s.registry.agents().len() {
                 return;
             }
+            horizon_client_render::valorant_spatial::set_deafened(snapshot.vision.deafen > 0);
             s.selected = snapshot.agent;
             if s.pending_equipped
                 .is_some_and(|seq| snapshot.sequence >= seq)
@@ -148,6 +149,12 @@ impl Game<'_> {
                     [0.0, 0.0, 16.0, 16.0],
                     if matches!(
                         zone.kind,
+                        valorant_horizon_engine::gameplay::zones::ZoneKind::Seize
+                            | valorant_horizon_engine::gameplay::zones::ZoneKind::Nightfall
+                    ) {
+                        [65, 25, 95, 170]
+                    } else if matches!(
+                        zone.kind,
                         valorant_horizon_engine::gameplay::zones::ZoneKind::CyberCage
                     ) {
                         [70, 130, 145, 255]
@@ -201,6 +208,79 @@ impl Game<'_> {
             }
         }
         for object in &snapshot.objects {
+            use valorant_horizon_engine::gameplay::{
+                geometry::{add, scale, unit},
+                objects::ObjectKind as K,
+                projectiles::beam,
+                smoke::orb,
+            };
+            if matches!(object.kind, K::Haunt | K::HauntOrb | K::SeizeOrb) {
+                let center = add(object.position, [0., 0.25, 0.]);
+                for q in orb(sub(center, draw.camera), 0.28) {
+                    self.native_world_quad(
+                        draw,
+                        "horizon/white",
+                        q,
+                        [0., 0., 16., 16.],
+                        [40, 15, 65, 255],
+                    );
+                }
+                if matches!(object.kind, K::Haunt) {
+                    let pupil = add(center, scale(unit(sub(draw.camera, center)), 0.27));
+                    for q in orb(sub(pupil, draw.camera), 0.09) {
+                        self.native_world_quad(
+                            draw,
+                            "horizon/white",
+                            q,
+                            [0., 0., 16., 16.],
+                            [160, 225, 230, 255],
+                        );
+                    }
+                    for side in [-1., 0., 1.] {
+                        for q in beam(
+                            sub(center, draw.camera),
+                            sub(add(object.position, [side * 0.4, -0.1, 0.2]), draw.camera),
+                            0.025,
+                        ) {
+                            self.native_world_quad(
+                                draw,
+                                "horizon/white",
+                                q,
+                                [0., 0., 16., 16.],
+                                [105, 30, 145, 220],
+                            );
+                        }
+                    }
+                }
+                continue;
+            }
+            if matches!(object.kind, K::Prowler) {
+                let forward = unit([object.velocity[0], 0., object.velocity[2]]);
+                let side = [-forward[2], 0., forward[0]];
+                let head = add(add(object.position, [0., 0.32, 0.]), scale(forward, 0.25));
+                for q in orb(sub(head, draw.camera), 0.12) {
+                    self.native_world_quad(
+                        draw,
+                        "horizon/white",
+                        q,
+                        [0., 0., 16., 16.],
+                        [155, 220, 230, 255],
+                    );
+                }
+                for n in [-1., 1.] {
+                    let from = add(object.position, add([0., 0.15, 0.], scale(side, n * 0.2)));
+                    let tip = add(from, add(scale(forward, 0.5), scale(side, n * 0.25)));
+                    for q in beam(sub(from, draw.camera), sub(tip, draw.camera), 0.04) {
+                        self.native_world_quad(
+                            draw,
+                            "horizon/white",
+                            q,
+                            [0., 0., 16., 16.],
+                            [45, 15, 70, 255],
+                        );
+                    }
+                }
+            }
             if matches!(
                 object.kind,
                 valorant_horizon_engine::gameplay::objects::ObjectKind::Trapwire
@@ -230,6 +310,12 @@ impl Game<'_> {
                     quad,
                     [0.0, 0.0, 16.0, 16.0],
                     match object.kind {
+                        valorant_horizon_engine::gameplay::objects::ObjectKind::HauntOrb
+                        | valorant_horizon_engine::gameplay::objects::ObjectKind::SeizeOrb
+                        | valorant_horizon_engine::gameplay::objects::ObjectKind::Haunt
+                        | valorant_horizon_engine::gameplay::objects::ObjectKind::Prowler => {
+                            [80, 30, 110, 255]
+                        }
                         valorant_horizon_engine::gameplay::objects::ObjectKind::Trapwire
                         | valorant_horizon_engine::gameplay::objects::ObjectKind::Spycam
                         | valorant_horizon_engine::gameplay::objects::ObjectKind::CageDevice => {
@@ -365,6 +451,21 @@ impl Game<'_> {
                         [215, 250, 255, 255],
                     );
                 }
+            }
+        }
+        for t in &snapshot.trails {
+            for q in valorant_horizon_engine::gameplay::projectiles::beam(
+                sub(t.from, draw.camera),
+                sub(t.to, draw.camera),
+                0.045,
+            ) {
+                self.native_world_quad(
+                    draw,
+                    "horizon/white",
+                    q,
+                    [0., 0., 16., 16.],
+                    [110, 45, 160, 220],
+                );
             }
         }
         for b in &snapshot.beams {

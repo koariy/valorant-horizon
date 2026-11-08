@@ -167,6 +167,26 @@ impl World for Bridge<'_, '_> {
         self.0.teleport_to_in_level(target, position, None, false);
         true
     }
+    fn teleport_player(&mut self, id: u128, position: V3) -> bool {
+        let Some(level) = self.0.native_level(self.0.dim.id()) else {
+            return false;
+        };
+        let key = (level.epoch().get(), self.0.dim.id().to_owned(), id);
+        if !self.move_player(id, position) {
+            return false;
+        }
+        teleport::record(key);
+        true
+    }
+    fn teleport_stamp(&self, target: Entity) -> u64 {
+        let Entity::Player(id) = target else {
+            return 0;
+        };
+        let Some(level) = self.0.native_level(self.0.dim.id()) else {
+            return 0;
+        };
+        teleport::stamp(&(level.epoch().get(), self.0.dim.id().to_owned(), id))
+    }
     fn velocity(&mut self, id: u128, v: V3, clear_fall: bool) -> bool {
         let game = &mut self.0;
         let Some(target) = game.target_by_uuid(id) else {

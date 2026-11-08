@@ -169,6 +169,18 @@ impl State {
             lines.push(info.clone());
         }
         if let Some(snapshot) = &self.snapshot {
+            if self.selected == 13 {
+                lines.push(format!(
+                    "Prowlers: {} | Seize: {} | Haunts: {} | Nightfall: {}",
+                    snapshot.kit[0], snapshot.kit[1], snapshot.kit[2], snapshot.kit[3]
+                ));
+            }
+            if snapshot.vision.deafen > 0 {
+                lines.push(format!(
+                    "Deafened: {:.1}s",
+                    snapshot.vision.deafen as f32 / 20.
+                ));
+            }
             if self.selected == 12 {
                 lines.push(format!(
                     "Tripwires: {} | cage devices: {} | camera: {}",

@@ -1,5 +1,6 @@
 fn valorant_stop(game: &mut crate::game::Game<'_>) {
     game.vh_flush_barriers();
+    valorant_horizon_engine::gameplay::teleport::clear_events();
     valorant_horizon_engine::gameplay::combat::clear();
     if let Ok(mut v) = valorant_horizon_engine::gameplay::effects::vulnerability_ids().lock() {
         v.clear();

@@ -1,0 +1,23 @@
+{
+  "url": "https://playvalorant.com/en-us/agents/fade/",
+  "date": "2026-11-08",
+  "html_sha256": "4fafca592cc012fab7d15e60a859aaf8ffc0694957d861e9dea79558cbf1c66c",
+  "abilities": [
+    {
+      "name": "SEIZE",
+      "description": "Equip an orb of nightmare ink. FIRE to throw the orb which will plummet to the ground\nafter a set amount of time. Upon hitting the ground, the ink will explode and create a\nzone in which enemies who are caught in it cannot escape the zone by normal means.\nRE-USE the ability to drop the projectile early in-flight"
+    },
+    {
+      "name": "HAUNT",
+      "description": "Equip a nightmarish entity. FIRE to throw the orb which will plummet to the\nground after a set amount of time. Upon hitting the ground, the orb will turn into a\nnightmarish entity that will reveal the location of enemies caught in its line of\nsight. Enemies can destroy this entity. RE-USE the ability to drop the projectile\nearly in-flight."
+    },
+    {
+      "name": "PROWLER",
+      "description": "EQUIP a Prowler. FIRE will send the Prowler out, causing it to travel in a straight line.\nThe Prowler will lock onto any enemies or trails in their frontal vision cone and chase\nthem, nearsighting them if it reaches them. HOLD the FIRE button to steer the Prowler in\nthe direction of your crosshair."
+    },
+    {
+      "name": "NIGHTFALL",
+      "description": "EQUIP the power of Fear. FIRE to send out a wave of nightmare energy that can\ntraverse through walls. The energy creates a trail to the opponent as well as deafens\nand decays them."
+    }
+  ]
+}

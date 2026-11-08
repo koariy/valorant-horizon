@@ -1,0 +1,23 @@
+{
+  "url": "https://playvalorant.com/en-us/agents/kay-o/",
+  "date": "2026-11-08",
+  "html_sha256": "d744c86d1bbbb710944ec74865bd7b2ee5dd6ca733ac93e18ed248022a088abc",
+  "abilities": [
+    {
+      "name": "FLASH/DRIVE",
+      "description": "EQUIP a flash grenade. FIRE to overhand throw. ALT FIRE to lob a weaker version that explodes quickly. The flash grenade explodes after a short fuse, Blinding anyone in line of sight."
+    },
+    {
+      "name": "ZERO/POINT",
+      "description": "EQUIP a suppression blade. FIRE to throw. The blade sticks to the first surface it hits, winds up, and Suppresses anyone in the radius of the explosion. Enemies can destroy this blade."
+    },
+    {
+      "name": "FRAG/MENT",
+      "description": "EQUIP an explosive fragment. FIRE to throw. The fragment sticks to the floor and explodes multiple times, dealing near lethal damage at the center with each explosion."
+    },
+    {
+      "name": "NULL/CMD",
+      "description": "INSTANTLY overload with polarized radianite energy that pulses from KAY/O in a massive radius. Enemies hit with pulses are Suppressed for a short duration. While overloaded, KAY/O gains Combat Stim and can be re-stabilized if downed."
+    }
+  ]
+}

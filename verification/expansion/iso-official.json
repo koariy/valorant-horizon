@@ -1,0 +1,23 @@
+{
+  "url": "https://playvalorant.com/en-us/agents/iso/",
+  "date": "2026-11-08",
+  "html_sha256": "a35263f31b1c8a231373ff830d037ce46e68a3c5f19cdeb78a7c84d5b4957490",
+  "abilities": [
+    {
+      "name": "UNDERCUT",
+      "description": "EQUIP a molecular bolt. Fire to throw it forward, applying a brief FRAGILE to all players it touches. The bolt can pass through solid objects, including walls."
+    },
+    {
+      "name": "DOUBLE TAP",
+      "description": "START a focus timer. Once completed, enter a flow state during which downed enemies you kill or damage generate an energy orb. Shooting this orb grants you a shield which absorbs one instance of damage from any source."
+    },
+    {
+      "name": "CONTINGENCY",
+      "description": "EQUIP to assemble prismatic energy. FIRE to push an indestructible wall of energy forward that blocks bullets."
+    },
+    {
+      "name": "KILL CONTRACT",
+      "description": "EQUIP an interdimensional arena. FIRE to hurl a column of energy through the battlefield, pulling you and the first enemy hit into the arena. You and your opponent duel to the death."
+    }
+  ]
+}

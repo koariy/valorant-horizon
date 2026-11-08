@@ -1,6 +1,13 @@
 // Shared plane geometry and audio state. This source is also compiled by the renderer adapter.
 use serde::{Deserialize, Serialize};
-use std::sync::{Mutex, OnceLock};
+use std::sync::{
+    Mutex, OnceLock,
+    atomic::{AtomicBool, Ordering},
+};
+static DEAFENED: AtomicBool = AtomicBool::new(false);
+pub fn set_deafened(active: bool) {
+    DEAFENED.store(active, Ordering::Relaxed);
+}
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Divide {
     pub point: [f64; 3],
@@ -63,5 +70,10 @@ pub fn listener() -> &'static Mutex<[f64; 3]> {
     L.get_or_init(|| Mutex::new([0.; 3]))
 }
 pub fn sound_gain(from: [f64; 3]) -> f32 {
-    listener().lock().ok().map_or(1., |p| gain(from, *p))
+    let gain = listener().lock().ok().map_or(1., |p| gain(from, *p));
+    if DEAFENED.load(Ordering::Relaxed) {
+        gain * 0.03
+    } else {
+        gain
+    }
 }

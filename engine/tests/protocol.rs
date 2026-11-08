@@ -58,7 +58,7 @@ fn maximal_snapshot_fits_native_payload_budget() {
     s.zones = vec![
         Zone {
             owner: u128::MAX,
-            kind: ZoneKind::FireWall,
+            kind: ZoneKind::Incendiary,
             ticks: u32::MAX,
             bounds: Box3 { min: at, max: at }
         };
@@ -116,10 +116,17 @@ fn maximal_snapshot_fits_native_payload_budget() {
         };
         recon::MAX_BEAMS
     ];
+    snapshot.trails = snapshot.beams.iter().take(2).cloned().collect();
+    snapshot.vision.deafen = u32::MAX;
     snapshot.bow_charge = Some(u32::MAX);
     snapshot.kit = [u32::MAX; 4];
     snapshot.bounces = u8::MAX;
     snapshot.fury_shots = u8::MAX;
     let bytes = serde_json::to_vec(&snapshot).unwrap();
-    assert!(bytes.len() < 30000, "{}", bytes.len());
+    assert!(bytes.len() < 29000, "{}", bytes.len());
+    let decoded: Snapshot = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(decoded.trails.len(), 2);
+    assert_eq!(decoded.objects.len(), snapshot.objects.len());
+    assert_eq!(decoded.objects[0].velocity, at);
+    assert_eq!(decoded.projectiles.len(), MAX_PROJECTILES);
 }

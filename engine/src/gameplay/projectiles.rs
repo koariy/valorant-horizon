@@ -26,8 +26,11 @@ pub struct Projectile {
     #[serde(rename = "o")]
     pub owner: u128,
     pub kind: ProjectileKind,
+    #[serde(rename = "p", alias = "position")]
     pub position: V3,
+    #[serde(rename = "v", alias = "velocity")]
     pub velocity: V3,
+    #[serde(rename = "t", alias = "ticks")]
     pub ticks: u32,
     pub guided: bool,
     #[serde(skip)]

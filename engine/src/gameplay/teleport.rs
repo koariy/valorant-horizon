@@ -10,7 +10,7 @@ pub fn safe(world: &mut impl World, actor: &Actor, position: V3) -> bool {
             .iter()
             .any(|a| a.entity != actor.entity && a.eligible && a.bounds.intersects(body))
     {
-        world.move_player(id, position)
+        world.teleport_player(id, position)
     } else {
         false
     }
@@ -36,4 +36,38 @@ pub fn target(world: &impl World, a: &Actor, range: f64) -> Option<V3> {
         && distance(a.position, feet) <= range + 0.05
         && clear_box(world, a.bounds.translated(sub(feet, a.position))))
     .then_some(feet)
+}
+
+// Native bridge event cursor. Keys include the level epoch and dimension so
+// separate worlds with identical player UUIDs cannot release each other's tethers.
+use std::{
+    collections::HashMap,
+    sync::{
+        Mutex, OnceLock,
+        atomic::{AtomicU64, Ordering},
+    },
+};
+type Key = (u64, String, u128);
+fn events() -> &'static Mutex<HashMap<Key, u64>> {
+    static EVENTS: OnceLock<Mutex<HashMap<Key, u64>>> = OnceLock::new();
+    EVENTS.get_or_init(Default::default)
+}
+pub fn record(key: Key) {
+    static NEXT: AtomicU64 = AtomicU64::new(1);
+    let mut all = events().lock().unwrap_or_else(|p| p.into_inner());
+    if all.len() >= 1024 && !all.contains_key(&key) {
+        all.clear();
+    }
+    all.insert(key, NEXT.fetch_add(1, Ordering::Relaxed));
+}
+pub fn stamp(key: &Key) -> u64 {
+    events()
+        .lock()
+        .unwrap_or_else(|p| p.into_inner())
+        .get(key)
+        .copied()
+        .unwrap_or(0)
+}
+pub fn clear_events() {
+    events().lock().unwrap_or_else(|p| p.into_inner()).clear();
 }

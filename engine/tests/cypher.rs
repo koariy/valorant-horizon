@@ -234,3 +234,24 @@ fn exhausted_visibility_budget_fails_closed() {
     assert!(c.ctx().visible([0., 2., 0.], [8., 2., 8.]));
     assert!(c.budget.rays < 128);
 }
+
+#[test]
+fn semantic_teleport_releases_wire_without_a_delayed_concussion() {
+    let (mut k, mut c) = (Cypher::default(), Scene::default());
+    hallway(&mut c);
+    place_wire(&mut k, &mut c);
+    c.w.actors[1] = actor(2, [0., 1., 0.]);
+    let a = c.w.actors[0].clone();
+    c.step(&mut k, &a);
+    let target = c.w.actors[1].clone();
+    assert!(teleport::safe(&mut c.w, &target, [4., 1., 0.]));
+    for _ in 0..45 {
+        c.step(&mut k, &a);
+    }
+    assert!(
+        !c.w.effects
+            .iter()
+            .any(|(_, name)| name == "minecraft:weakness")
+    );
+    assert_eq!(k.stats()[0], 1);
+}

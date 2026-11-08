@@ -1,0 +1,23 @@
+{
+  "url": "https://playvalorant.com/en-us/agents/neon/",
+  "date": "2026-11-08",
+  "html_sha256": "b5dd93ba7a4164d10da4c324efb154841fc8f6881c60a1e28ce0238c31742422",
+  "abilities": [
+    {
+      "name": "RELAY BOLT",
+      "description": "INSTANTLY throw an energy bolt that bounces once. Upon hitting each surface, the bolt electrifies the ground below with a concussive blast."
+    },
+    {
+      "name": "HIGH GEAR",
+      "description": "INSTANTLY channel Neon’s power for increased speed. When charged, ALT FIRE to trigger an electric slide. Slide charge resets every two kills."
+    },
+    {
+      "name": "FAST LANE",
+      "description": "FIRE two energy lines forward on the ground that extend a short distance or until they hit a surface. The lines rise into walls of static electricity that block vision and damage enemies passing through them."
+    },
+    {
+      "name": "OVERDRIVE",
+      "description": "Unleash Neon’s full power and speed for a short duration. FIRE to channel the power into a deadly lightning beam with high movement accuracy. The duration resets on each kill."
+    }
+  ]
+}

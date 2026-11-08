@@ -76,6 +76,13 @@ pub trait World {
     }
     fn boxes(&self, cell: [i32; 3]) -> Option<Vec<Box3>>;
     fn move_player(&mut self, player: u128, position: V3) -> bool;
+    /// Semantic teleport, distinct from swept dash/camera/tether corrections.
+    fn teleport_player(&mut self, player: u128, position: V3) -> bool {
+        self.move_player(player, position)
+    }
+    fn teleport_stamp(&self, _target: Entity) -> u64 {
+        0
+    }
     fn velocity(&mut self, player: u128, velocity: V3, clear_fall: bool) -> bool;
     fn block(&self, _cell: [i32; 3]) -> Option<String> {
         None
@@ -166,6 +173,7 @@ pub struct Snapshot {
     pub kit: [u32; 4],
     pub contacts: Vec<recon::Contact>,
     pub beams: Vec<recon::Beam>,
+    pub trails: Vec<recon::Beam>,
     pub bow_charge: Option<u32>,
     pub bounces: u8,
     pub fury_shots: u8,

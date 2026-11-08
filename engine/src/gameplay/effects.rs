@@ -7,6 +7,7 @@ use std::{
 pub struct Vision {
     pub flash: u32,
     pub nearsight: u32,
+    pub deafen: u32,
     pub phased: bool,
 }
 #[derive(Clone, Copy, Debug, Default)]

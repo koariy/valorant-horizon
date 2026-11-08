@@ -2,6 +2,10 @@ use super::{geometry::*, *};
 use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum ObjectKind {
+    HauntOrb,
+    SeizeOrb,
+    Haunt,
+    Prowler,
     Trapwire,
     Spycam,
     CageDevice,
@@ -19,15 +23,28 @@ pub struct Object {
     #[serde(rename = "o")]
     pub owner: u128,
     pub kind: ObjectKind,
+    #[serde(rename = "p", alias = "position")]
     pub position: V3,
+    #[serde(rename = "h", alias = "health")]
     pub health: f32,
+    #[serde(rename = "t", alias = "ticks")]
     pub ticks: u32,
+    #[serde(rename = "v", alias = "velocity")]
     pub velocity: V3,
     pub target: Option<Entity>,
 }
 impl ObjectKind {
     pub fn is_advanced(self) -> bool {
-        matches!(self, Self::Trapwire | Self::Spycam | Self::CageDevice)
+        matches!(
+            self,
+            Self::Trapwire
+                | Self::Spycam
+                | Self::CageDevice
+                | Self::HauntOrb
+                | Self::SeizeOrb
+                | Self::Haunt
+                | Self::Prowler
+        )
     }
 }
 impl Object {
@@ -61,6 +78,10 @@ impl Object {
         }
         let (width, height) = match self.kind {
             ObjectKind::Trapwire | ObjectKind::Spycam | ObjectKind::CageDevice => (0.12, 0.25),
+            ObjectKind::HauntOrb
+            | ObjectKind::SeizeOrb
+            | ObjectKind::Haunt
+            | ObjectKind::Prowler => (0.25, 0.5),
             ObjectKind::Drone => (0.15, 0.3),
             ObjectKind::ReconBolt => (0.12, 0.25),
             ObjectKind::Soul => (0.15, 0.3),

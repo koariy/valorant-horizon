@@ -20,6 +20,7 @@ pub fn actor(id: u128, p: V3) -> Actor {
     }
 }
 pub struct TestWorld {
+    pub teleports: std::collections::HashMap<Entity, u64>,
     pub intel: std::collections::HashMap<u128, Vec<u128>>,
     pub unloaded_z: Option<i32>,
     pub actors: Vec<Actor>,
@@ -38,6 +39,7 @@ pub struct TestWorld {
 impl Default for TestWorld {
     fn default() -> Self {
         Self {
+            teleports: Default::default(),
             intel: Default::default(),
             unloaded_z: None,
             blocks: Default::default(),
@@ -121,6 +123,16 @@ impl World for TestWorld {
         a.bounds = a.bounds.translated(sub(p, a.position));
         a.position = p;
         true
+    }
+    fn teleport_player(&mut self, id: u128, position: V3) -> bool {
+        if !self.move_player(id, position) {
+            return false;
+        }
+        *self.teleports.entry(Entity::Player(id)).or_default() += 1;
+        true
+    }
+    fn teleport_stamp(&self, target: Entity) -> u64 {
+        self.teleports.get(&target).copied().unwrap_or(0)
     }
     fn velocity(&mut self, id: u128, v: V3, _: bool) -> bool {
         let a = self

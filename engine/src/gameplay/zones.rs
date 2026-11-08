@@ -2,6 +2,8 @@ use super::geometry::*;
 use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum ZoneKind {
+    Seize,
+    Nightfall,
     CyberCage,
     WaterWall,
     Whirlpool,
@@ -21,6 +23,7 @@ pub struct Zone {
     pub owner: u128,
     pub kind: ZoneKind,
     pub bounds: Box3,
+    #[serde(rename = "t", alias = "ticks")]
     pub ticks: u32,
 }
 impl Zone {

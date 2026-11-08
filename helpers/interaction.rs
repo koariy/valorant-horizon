@@ -81,7 +81,7 @@ fn valorant_fire(
             );
         s.objects
             .iter()
-            .any(|o| o.health > 0. && o.bounds().segment(from, end).is_some_and(|t| t < wall))
+            .any(|o| o.health > 0. && o.hit(from, end, 0.).is_some_and(|t| t < wall))
     });
     if (equipped || object) && (button == 0 || button == 1) {
         *canceled = true;

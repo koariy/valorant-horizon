@@ -1,0 +1,23 @@
+{
+  "url": "https://playvalorant.com/en-us/agents/waylay/",
+  "date": "2026-11-08",
+  "html_sha256": "7df374a0b98bbb4d8722d82616fc16379e4ab17149872599714ae65d1280c409",
+  "abilities": [
+    {
+      "name": "Saturate",
+      "description": "INSTANTLY throw a cluster of light that explodes upon contact with the ground, Hindering nearby players with a powerful movement and weapon slow."
+    },
+    {
+      "name": "Lightspeed",
+      "description": "EQUIP to prepare for a burst of speed. FIRE to dash forward twice. ALT FIRE to dash once. Only your first dash can send you upward."
+    },
+    {
+      "name": "Refract",
+      "description": "INSTANTLY create a beacon of light on the floor. REACTIVATE to speed back to your beacon as a mote of pure light. You are invulnerable as you travel."
+    },
+    {
+      "name": "Convergent Paths",
+      "description": "EQUIP to focus your prismatic power. FIRE to create an afterimage of yourself that projects a beam of light. After a brief delay, you gain a powerful speed boost and the beam expands, Hindering other players in the area."
+    }
+  ]
+}

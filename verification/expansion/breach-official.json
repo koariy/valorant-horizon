@@ -1,0 +1,23 @@
+{
+  "url": "https://playvalorant.com/en-us/agents/breach/",
+  "date": "2026-11-08",
+  "html_sha256": "36f3cd3b4a9f259be5708c484f2e895bb148f325ba53dde25666c1444b39f265",
+  "abilities": [
+    {
+      "name": "FLASHPOINT",
+      "description": "EQUIP a blinding charge. FIRE the charge to set  fast-acting burst through the wall. The charge detonates to blind all players looking at it."
+    },
+    {
+      "name": "FAULT LINE",
+      "description": "EQUIP a seismic blast. HOLD FIRE to increase the distance. RELEASE to set off the quake, dazing all players in its zone and in a line up to the zone."
+    },
+    {
+      "name": "AFTERSHOCK",
+      "description": "EQUIP a fusion charge. FIRE the charge to set a slow-acting burst through the wall. The burst does heavy damage to anyone caught in its area."
+    },
+    {
+      "name": "ROLLING THUNDER",
+      "description": "EQUIP a seismic charge. FIRE to send a cascading quake through all terrain in a large cone. The quake dazes and knocks up anyone caught in it."
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 //! Additional kits share the existing authoritative World and resource pools.
 pub mod cypher;
+pub mod fade;
 use crate::{
     abilities::{Ability, Runtime},
     gameplay::{
@@ -107,6 +108,7 @@ pub struct Context<'a, W: World> {
     pub vision: &'a mut std::collections::HashMap<u128, effects::Vision>,
     pub corpses: &'a mut Vec<Corpse>,
     pub kills: &'a mut Vec<(u128, Entity)>,
+    pub decay: Option<&'a mut std::collections::HashMap<Entity, toxin::Decay>>,
     pub budget: &'a mut Budget,
 }
 impl<W: World> Context<'_, W> {
@@ -330,6 +332,12 @@ pub trait Agent {
     fn owns(&self, _id: u64) -> bool {
         false
     }
+    fn zone_active(&self, _kind: zones::ZoneKind) -> bool {
+        false
+    }
+    fn trails(&self) -> Vec<Beam> {
+        vec![]
+    }
     fn stats(&self) -> [u32; 4] {
         [0; 4]
     }
@@ -352,6 +360,8 @@ macro_rules! kits{($(($index:literal,$field:ident,$name:literal,$ty:path)),+ $(,
  pub fn phased(&self,i:usize)->bool{match i{$($index=>self.$field.phased(),)+_=>false}}
  pub fn camera(&self,i:usize)->Option<V3>{match i{$($index=>self.$field.camera(),)+_=>None}}
  pub fn equipped(&self,i:usize)->bool{match i{$($index=>self.$field.equipped(),)+_=>false}}
+ pub fn zone_active(&self,i:usize,kind:zones::ZoneKind)->bool{match i{$($index=>self.$field.zone_active(kind),)+_=>false}}
+ pub fn trails(&self,i:usize)->Vec<Beam>{match i{$($index=>self.$field.trails(),)+_=>vec![]}}
  pub fn stats(&self,i:usize)->[u32;4]{match i{$($index=>self.$field.stats(),)+_=>[0;4]}}
  pub fn kill(&mut self,i:usize){match i{$($index=>self.$field.kill(),)+_=>{}}}
  pub fn activate(&mut self,i:usize,slot:usize,a:&Actor,c:&mut Context<'_,impl World>)->bool{match i{$($index=>self.$field.activate(slot,a,c),)+_=>false}}
@@ -361,4 +371,7 @@ macro_rules! kits{($(($index:literal,$field:ident,$name:literal,$ty:path)),+ $(,
  pub fn tick(&mut self,i:usize,a:&Actor,c:&mut Context<'_,impl World>){match i{$($index=>{self.$field.core_mut().tick();if a.eligible{self.$field.tick(a,c);}else{self.$field.leave();}},)+_=>{}}if let Some(id)=owner(a){match i{$($index=>c.world.protect(id,self.$field.protection(a)),)+_=>{}}}}
  }
 };}
-kits!((12, cypher, "Cypher", cypher::Cypher));
+kits!(
+    (12, cypher, "Cypher", cypher::Cypher),
+    (13, fade, "Fade", fade::Fade),
+);

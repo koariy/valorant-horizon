@@ -32,6 +32,7 @@ struct Wire {
     victim: Option<Entity>,
     delay: u32,
     anchor: V3,
+    teleport: u64,
 }
 struct Cage {
     at: V3,
@@ -78,6 +79,9 @@ impl Cypher {
     }
 }
 impl Agent for Cypher {
+    fn zone_active(&self, kind: zones::ZoneKind) -> bool {
+        matches!(kind, zones::ZoneKind::CyberCage) && !self.cages.is_empty()
+    }
     fn stats(&self) -> [u32; 4] {
         [
             self.wires.len() as u32,
@@ -107,6 +111,7 @@ impl Agent for Cypher {
         self.cam = None;
         self.wires.clear();
         self.devices.clear();
+        self.cages.clear();
     }
     fn activate(&mut self, slot: usize, a: &Actor, c: &mut Context<'_, impl World>) -> bool {
         let Some(id) = owner(a) else {
@@ -279,6 +284,7 @@ impl Agent for Cypher {
                 victim: None,
                 delay: 0,
                 anchor: at,
+                teleport: 0,
             });
         } else if slot == 2 {
             if self.core.slots[2].charges == 0 {
@@ -359,7 +365,9 @@ impl Agent for Cypher {
             };
             if let Some(victim) = wire.victim {
                 if let Some(target) = c.actors.iter().find(|t| t.entity == victim && t.eligible) {
-                    if distance(target.position, wire.anchor) > 5. {
+                    if c.world.teleport_stamp(victim) != wire.teleport
+                        || distance(target.position, wire.anchor) > 5.
+                    {
                         wire.victim = None;
                         continue;
                     }
@@ -390,6 +398,7 @@ impl Agent for Cypher {
                             .is_some()
                     });
                     if crossed {
+                        wire.teleport = c.world.teleport_stamp(t.entity);
                         wire.victim = Some(t.entity);
                         wire.anchor = t.position;
                         wire.delay = 40;
