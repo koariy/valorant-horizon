@@ -1,4 +1,5 @@
 //! Additional kits share the existing authoritative World and resource pools.
+pub mod breach;
 pub mod cypher;
 pub mod fade;
 pub mod iso;
@@ -231,7 +232,7 @@ impl<W: World> Context<'_, W> {
             .effect(target, "minecraft:mining_fatigue", ticks, 4);
     }
     pub fn concuss(&mut self, target: Entity, ticks: u32) {
-        self.world.effect(target, "minecraft:slowness", ticks, 4);
+        self.hinder(target, ticks);
         self.world.effect(target, "minecraft:weakness", ticks, 1);
     }
     pub fn flash(&mut self, at: V3, range: f64, ticks: u32) {
@@ -459,7 +460,7 @@ macro_rules! kits{($(($index:literal,$field:ident,$name:literal,$ty:path)),+ $(,
  pub fn kill(&mut self,i:usize){match i{$($index=>self.$field.kill(),)+_=>{}}}
  pub fn activate(&mut self,i:usize,slot:usize,a:&Actor,c:&mut Context<'_,impl World>)->bool{match i{$($index=>self.$field.activate(slot,a,c),)+_=>false}}
  pub fn fire(&mut self,i:usize,alt:bool,a:&Actor,c:&mut Context<'_,impl World>)->bool{match i{$($index=>self.$field.fire(alt,a,c),)+_=>false}}
- pub fn release(&mut self,i:usize,a:&Actor,c:&mut Context<'_,impl World>)->bool{match i{$($index=>self.$field.release(a,c),)+_=>false}}
+ pub fn release(&mut self,i:usize,slot:usize,a:&Actor,c:&mut Context<'_,impl World>)->bool{match i{$($index=>if slot==4{self.$field.release(a,c)}else{true},)+_=>false}}
  pub fn recall(&mut self,i:usize,a:&Actor,c:&mut Context<'_,impl World>)->bool{match i{$($index=>self.$field.recall(a,c),)+_=>false}}
  pub fn tick(&mut self,i:usize,a:&Actor,c:&mut Context<'_,impl World>){match i{$($index=>{self.$field.core_mut().tick();if a.eligible{self.$field.tick(a,c);}else{self.$field.inactive_tick();}},)+_=>{}}if let Some(id)=owner(a){match i{$($index=>c.world.protect(id,self.$field.protection(a)),)+_=>{}}}}
  }
@@ -472,4 +473,5 @@ kits!(
     (16, iso, "Iso", iso::Iso),
     (17, waylay, "Waylay", waylay::Waylay),
     (18, kayo, "KAY/O", kayo::Kayo),
+    (19, breach, "Breach", breach::Breach),
 );

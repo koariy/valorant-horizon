@@ -1,0 +1,8 @@
+{
+  "bytes": 314272176,
+  "sha256": "84a6c8dfd9fbc1d8ba42b985bcd736cb2af9ba5f05fe20a7ea55d28b1bf34470",
+  "target": "x86_64-unknown-linux-gnu",
+  "features": "--no-default-features",
+  "horizon_commit": "41f822b659789780f58d32c63ddfb6887ea1b8bf",
+  "mixins_commit": "5a64af938ec86b00d53d16a408aabc0038fb3e57"
+}

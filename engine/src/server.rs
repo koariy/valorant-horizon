@@ -506,6 +506,7 @@ impl Session {
                 }
                 Action::Release(4) if p.agent >= 12 => p.extra.release(
                     p.agent,
+                    4,
                     a,
                     &mut crate::advanced::Context {
                         world: w,

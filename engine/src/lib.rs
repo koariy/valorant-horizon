@@ -181,6 +181,12 @@ impl State {
                     snapshot.stabilizing
                 ));
             }
+            if self.selected == 19 {
+                lines.push(format!(
+                    "Fault charge: {} | wall charges: {} | quakes: {} | hits: {}",
+                    snapshot.kit[0], snapshot.kit[1], snapshot.kit[2], snapshot.kit[3]
+                ));
+            }
             if self.selected == 18 {
                 lines.push(format!(
                     "NULL/CMD: {} | suppressed targets: {} | downed: {} | pool: {}",

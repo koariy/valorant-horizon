@@ -154,6 +154,14 @@ impl World for TestWorld {
         a.velocity = v;
         true
     }
+    fn push_entity(&mut self, target: Entity, velocity: V3) -> bool {
+        if let Some(a) = self.actors.iter_mut().find(|a| a.entity == target) {
+            a.velocity = velocity;
+            true
+        } else {
+            false
+        }
+    }
     fn hurt(&mut self, owner: u128, t: Entity, d: f32) -> Hit {
         self.hurt_with(owner, t, d, "minecraft:arrow")
     }

@@ -220,6 +220,34 @@ impl Game<'_> {
                 projectiles::beam,
                 smoke::orb,
             };
+            if matches!(object.kind, K::SeismicFront | K::WallCharge) {
+                if matches!(object.kind, K::SeismicFront) {
+                    for q in beam(
+                        sub(add(object.position, [0., 0.1, 0.]), draw.camera),
+                        sub(add(object.velocity, [0., 0.1, 0.]), draw.camera),
+                        0.16,
+                    ) {
+                        self.native_world_quad(
+                            draw,
+                            "horizon/white",
+                            q,
+                            [0., 0., 16., 16.],
+                            [255, 145, 45, 220],
+                        );
+                    }
+                } else {
+                    for q in orb(sub(object.position, draw.camera), 0.15) {
+                        self.native_world_quad(
+                            draw,
+                            "horizon/white",
+                            q,
+                            [0., 0., 16., 16.],
+                            [255, 155, 55, 230],
+                        );
+                    }
+                }
+                continue;
+            }
             if matches!(
                 object.kind,
                 K::Fragment | K::FlashDrive | K::SuppressionBlade | K::KayoCore
@@ -494,6 +522,8 @@ impl Game<'_> {
                     quad,
                     [0.0, 0.0, 16.0, 16.0],
                     match object.kind {
+                        valorant_horizon_engine::gameplay::objects::ObjectKind::SeismicFront | valorant_horizon_engine::gameplay::objects::ObjectKind::WallCharge => [255,145,45,220],
+
                         valorant_horizon_engine::gameplay::objects::ObjectKind::Fragment |
                         valorant_horizon_engine::gameplay::objects::ObjectKind::FlashDrive |
                         valorant_horizon_engine::gameplay::objects::ObjectKind::SuppressionBlade |

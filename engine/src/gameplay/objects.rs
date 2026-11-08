@@ -2,6 +2,8 @@ use super::{geometry::*, *};
 use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum ObjectKind {
+    SeismicFront,
+    WallCharge,
     Fragment,
     FlashDrive,
     SuppressionBlade,
@@ -70,7 +72,9 @@ impl ObjectKind {
     pub fn damageable(self) -> bool {
         !matches!(
             self,
-            Self::Fragment
+            Self::SeismicFront
+                | Self::WallCharge
+                | Self::Fragment
                 | Self::FlashDrive
                 | Self::KayoCore
                 | Self::LightCluster
@@ -87,7 +91,9 @@ impl ObjectKind {
     pub fn is_advanced(self) -> bool {
         matches!(
             self,
-            Self::Fragment
+            Self::SeismicFront
+                | Self::WallCharge
+                | Self::Fragment
                 | Self::FlashDrive
                 | Self::SuppressionBlade
                 | Self::KayoCore
@@ -217,7 +223,9 @@ impl Object {
             };
         }
         let (width, height) = match self.kind {
-            ObjectKind::Fragment
+            ObjectKind::SeismicFront
+            | ObjectKind::WallCharge
+            | ObjectKind::Fragment
             | ObjectKind::FlashDrive
             | ObjectKind::SuppressionBlade
             | ObjectKind::KayoCore
