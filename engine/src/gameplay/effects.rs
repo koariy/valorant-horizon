@@ -13,6 +13,11 @@ pub struct Vision {
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Protection {
     pub health: f32,
+    pub hurt_epoch: u64,
+    pub down_epoch: u64,
+    pub downable: bool,
+    pub downed: bool,
+    pub downed_pool: f32,
     pub one_hit: bool,
     pub shield_epoch: u64,
     pub invulnerable: bool,
@@ -30,6 +35,9 @@ pub fn vulnerable() -> &'static Mutex<HashMap<i32, bool>> {
     V.get_or_init(Default::default)
 }
 pub fn health_damage(entity: i32, amount: &mut f32) {
+    health_damage_kind(entity, "", amount);
+}
+pub fn health_damage_kind(entity: i32, kind: &str, amount: &mut f32) {
     if vulnerable()
         .lock()
         .ok()
@@ -40,11 +48,28 @@ pub fn health_damage(entity: i32, amount: &mut f32) {
 
     if let Ok(mut all) = protections().lock()
         && let Some(p) = all.get_mut(&entity)
-        && p.returning
-        && *amount >= p.health
+        && *amount > 0.
     {
-        *amount = (p.health - 1.0).max(0.0);
-        p.requested = true;
+        if kind == "minecraft:fell_out_of_world" && (p.downable || p.downed) {
+            return;
+        }
+        if p.downed {
+            let remaining = (*amount - p.downed_pool).max(0.);
+            p.downed_pool = (p.downed_pool - *amount).max(0.);
+            *amount = if p.downed_pool <= 0. {
+                remaining.max(p.health)
+            } else {
+                0.
+            };
+        } else if p.downable && p.health > 0. && *amount >= p.health {
+            p.downed = true;
+            p.downable = false;
+            p.downed_pool = 40.;
+            *amount = (p.health - 1.).max(0.);
+        } else if p.returning && *amount >= p.health {
+            *amount = (p.health - 1.).max(0.);
+            p.requested = true;
+        }
     }
 }
 
@@ -73,6 +98,30 @@ pub fn merge_protection(old: Option<Protection>, mut next: Protection) -> Protec
     {
         next.one_hit = false;
     }
+    next.hurt_epoch = old.map_or(next.hurt_epoch, |p| p.hurt_epoch);
+    if next.down_epoch != 0
+        && (next.downable || next.downed)
+        && let Some(old) = old.filter(|p| p.down_epoch == next.down_epoch && p.downed)
+    {
+        next.downed = true;
+        next.downable = false;
+        next.downed_pool = old.downed_pool;
+    }
     next.requested = next.returning && old.is_some_and(|old| old.requested);
     next
+}
+
+/// Native interactions use the current acting player, including resident entity id 0.
+pub fn actions_locked(entity: i32) -> bool {
+    protections()
+        .lock()
+        .ok()
+        .is_some_and(|all| all.get(&entity).is_some_and(|p| p.disarmed || p.downed))
+}
+
+pub fn is_downed(entity: i32) -> bool {
+    protections()
+        .lock()
+        .ok()
+        .is_some_and(|all| all.get(&entity).is_some_and(|p| p.downed))
 }

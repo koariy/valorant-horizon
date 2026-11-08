@@ -1,12 +1,8 @@
-# Valorant Horizon — 0.4.0-dev.6
+# Valorant Horizon — 0.4.0-dev.7
 
-Добавлена Waylay: V → Right → 8. Четыре способности, аудит и ограничения — `docs/WAYLAY.md`, проверки — `verification/waylay/RESULTS.md`. Ранее добавлен Iso (V → Right → 7): Contingency, Undercut, Double Tap со щитом на одно попадание. Kill Contract отключён до интеграции изолированной арены; см. `docs/ISO.md`. Проверки — `verification/iso/RESULTS.md`. Ранее добавлен Yoru: V → Right → 6, `docs/YORU.md`, проверки `verification/yoru/RESULTS.md`. Cypher, Fade и Neon также включены. Четыре способности каждого описаны в `docs/CYPHER.md` и `docs/FADE.md`; проверки — `verification/cypher/RESULTS.md` и `verification/fade/RESULTS.md`. Clove Not Dead Yet и Sage Resurrection остаются отключены до безопасной интеграции respawn. Это версия разработки: игровой запуск ещё не выполнен.
+Rust/.hnmod мод для обычного мира Horizon: 19 агентов, серверные способности, меню, HUD и сохранение клавиш. Без раундов, Spike, экономики и обязательной зависимости от оружия. Текущий этап — KAY/O; механики и ограничения в `docs/KAYO.md`, результаты проверок в `verification/kayo/RESULTS.md`.
 
-Текущая разработка следующей группы: `docs/GROUP2.md`. Интеграция необязательного помощника DeepSeek: `docs/DEEPSEEK.md`, CLI `scripts/deepseek_delegate.py`; без ключа работает только Codex.
-
-В исходниках добавлены Brimstone (V → 7) и Viper (V → 8, `docs/VIPER.md`); архивы dist/0.2.0 относятся к предыдущему выпуску. Игровая приёмка этих агентов ещё не выполнена.
-
-Продолжение существующего Rust/.hnmod проекта для обычного мира Horizon: восемнадцать агентов, серверная симуляция способностей, меню, HUD и сохранение клавиш. Без раундов, Spike, экономики и обязательной зависимости от оружия. Это проверенная компиляцией и headless-тестами реализация; проверка в запущенной игре ещё нужна.
+Проверки выполняются в коде и нативной сборке. Игровой запуск и LAN-приёмка ещё не проведены. Sage Resurrection, Clove Not Dead Yet и Iso Kill Contract отключены до соответствующей серверной интеграции. Необязательный DeepSeek CLI: `docs/DEEPSEEK.md`; без ключа Codex работает самостоятельно.
 
 ## Совместимость
 
@@ -35,6 +31,7 @@
 | Cypher | растяжки с HP/tether/reveal, активируемые клетки, камера с дротиком, раскрытие по подтверждённой смерти | `docs/CYPHER.md` |
 | Fade | Prowler с преследованием/следами, удержание Seize, разрушаемый Haunt по LOS, Nightfall с обратимым decay и deafen | `docs/FADE.md` |
 | Neon | High Gear с энергией/slide, отражающийся Relay Bolt, две стены Fast Lane, Overdrive и восстановление по kill credit | `docs/NEON.md` |
+| KAY/O | FRAG/MENT с импульсами, FLASH/DRIVE, разрушаемый ZERO/POINT и общая suppression, NULL/CMD со stim/downed/стабилизацией союзником | `docs/KAYO.md` |
 | Waylay | наземный Saturate/Hinder, один/два Lightspeed с коллизиями, защищённый Refract по пути, расширяющийся Convergent Paths и speed | `docs/WAYLAY.md` |
 | Iso | движущаяся неразрушаемая стена, проходящий стены FRAGILE, focus/flow и приватные shootable орбы с одноразовым щитом; X отключён | `docs/ISO.md` |
 | Yoru | движущееся/неактивное Fakeout с flash, отражающийся Blindside, настоящий/ложный Gatecrash, защищённый Drift; стилизованное эхо без копии личного скина | `docs/YORU.md` |
@@ -43,7 +40,7 @@ Resurrection требует проверенной интеграции respawn/
 
 ## Установка
 
-`dist/valorant_horizon-0.4.0-dev.6.hnmod` — исходный native bundle, для установки launcher пересобирает Horizon. Это не DLL и не Bukkit/Fabric-мод. Все участники и сервер должны использовать совместимую сборку Horizon с модом.
+`dist/valorant_horizon-0.4.0-dev.7.hnmod` — исходный native bundle, для установки launcher пересобирает Horizon. Это не DLL и не Bukkit/Fabric-мод. Все участники и сервер должны использовать совместимую сборку Horizon с модом.
 
 ```sh
 horizon-launcher settings native-profile dev
@@ -54,7 +51,7 @@ horizon-launcher native-build /absolute/path/to/valorant-horizon --instance YOUR
 
 ## Управление
 
-- V: меню; Left/Right переключают страницы по 10 агентов. На первой странице 1 Jett, 2 Sage, 3 Phoenix, 4 Omen, 5 Raze, 6 Reyna, 7 Brimstone, 8 Viper, 9 Astra, 0 Harbor; на второй 1 Clove, 2 Sova, 3 Cypher, 4 Fade, 5 Neon, 6 Yoru, 7 Iso, 8 Waylay. Сохранены быстрые клавиши минус (-) Clove и = Sova. R возвращает устройства Cypher вблизи.
+- V: меню; Left/Right переключают страницы по 10 агентов. На первой странице 1 Jett, 2 Sage, 3 Phoenix, 4 Omen, 5 Raze, 6 Reyna, 7 Brimstone, 8 Viper, 9 Astra, 0 Harbor; на второй 1 Clove, 2 Sova, 3 Cypher, 4 Fade, 5 Neon, 6 Yoru, 7 Iso, 8 Waylay, 9 KAY/O. Сохранены быстрые клавиши минус (-) Clove и = Sova. R возвращает устройства Cypher вблизи.
 - C/Q/E/X: четыре слота. В меню та же клавиша выбирает слот для переназначения, следующая клавиша сохраняется. Esc отменяет ввод.
 - ЛКМ/ПКМ: применение подготовленной способности / альтернативное применение. Особые действия описаны в документации агента.
 - B: отмена подготовки/канала, потраченные заряды не возвращаются.

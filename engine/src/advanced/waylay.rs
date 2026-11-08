@@ -103,30 +103,17 @@ impl Waylay {
             else {
                 continue;
             };
-            o.velocity[1] -= 0.04;
-            let end = add(o.position, o.velocity);
-            if let Some(h) = block_collision(c.world, o.position, end, 0.1) {
-                if !h.known {
-                    o.health = 0.;
-                    continue;
-                }
-                o.position = add(
-                    add(o.position, scale(o.velocity, h.time)),
-                    scale(h.normal, 0.03),
-                );
-                if h.normal[1] > 0.5 {
+            match throwable::advance(c.world, o, 0.04, 0.1) {
+                throwable::Flight::Unknown => continue,
+                throwable::Flight::Surface(n) if n[1] > 0.5 => {
                     impacts.push(o.position);
                     o.health = 0.;
-                } else {
-                    o.velocity = scale(
-                        sub(o.velocity, scale(h.normal, 2. * dot(o.velocity, h.normal))),
-                        0.5,
-                    );
                 }
-            } else {
-                o.position = end;
+                throwable::Flight::Surface(n) => throwable::reflect(o, n, 0.5),
+                throwable::Flight::Air => {}
             }
         }
+
         self.clusters.retain(|id| {
             c.objects
                 .iter()
@@ -269,6 +256,10 @@ impl Agent for Waylay {
             u32::from(self.phased()),
             self.boost,
         ]
+    }
+    fn suppress(&mut self) {
+        self.core.cancel();
+        self.dash = None;
     }
     fn cancel(&mut self) {
         self.core.cancel();

@@ -10,7 +10,10 @@ fn valorant_protection(
         return;
     }
     if let Ok(mut all) = valorant_horizon_engine::gameplay::effects::protections().lock() {
-        if causing != 0 && causing == direct && all.get(&causing).is_some_and(|p| p.disarmed) {
+        if causing != 0
+            && causing == direct
+            && all.get(&causing).is_some_and(|p| p.disarmed || p.downed)
+        {
             *canceled = true;
             return;
         }

@@ -169,6 +169,24 @@ impl State {
             lines.push(info.clone());
         }
         if let Some(snapshot) = &self.snapshot {
+            if snapshot.suppressed > 0 {
+                lines.push(format!(
+                    "SUPPRESSED {:.1}s",
+                    snapshot.suppressed as f32 / 20.
+                ));
+            }
+            if snapshot.stabilize {
+                lines.push(format!(
+                    "Hold R to stabilize ally | {} ticks",
+                    snapshot.stabilizing
+                ));
+            }
+            if self.selected == 18 {
+                lines.push(format!(
+                    "NULL/CMD: {} | suppressed targets: {} | downed: {} | pool: {}",
+                    snapshot.kit[0], snapshot.kit[1], snapshot.kit[2], snapshot.kit[3]
+                ));
+            }
             if self.selected == 17 {
                 lines.push(format!(
                     "Dash legs: {} | Refract: {} | returning: {} | boost: {}",

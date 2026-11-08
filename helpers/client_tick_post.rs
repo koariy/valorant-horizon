@@ -16,6 +16,16 @@ fn valorant_client_tick(game: &mut crate::game::Game<'_>) {
     if let Some(index) = selection {
         game.vh_send(Action::Select(index));
     }
+    let stabilize = game.native_playing()
+        && state().lock().ok().is_some_and(|s| {
+            !s.menu
+                && s.heartbeat % 5 == 0
+                && s.held.contains("key.keyboard.r")
+                && s.snapshot.as_ref().is_some_and(|x| x.stabilize)
+        });
+    if stabilize {
+        game.vh_send(Action::Stabilize(true));
+    }
     let aiming = valorant_horizon_engine::state()
         .lock()
         .ok()

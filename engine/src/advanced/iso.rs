@@ -137,6 +137,9 @@ impl Agent for Iso {
         }
         self.contributions.remove(&target);
     }
+    fn suppress(&mut self) {
+        self.core.cancel();
+    }
     fn cancel(&mut self) {
         self.core.cancel();
         self.focus = 0;

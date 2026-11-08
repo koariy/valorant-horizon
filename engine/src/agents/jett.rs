@@ -186,6 +186,9 @@ impl Jett {
         true
     }
     pub fn tick(&mut self, a: &Actor, w: &mut impl World) {
+        self.tick_controlled(a, w, false);
+    }
+    pub fn tick_controlled(&mut self, a: &Actor, w: &mut impl World, blocked: bool) {
         let Entity::Player(owner) = a.entity else {
             return;
         };
@@ -197,7 +200,7 @@ impl Jett {
         if self.slots[3].active == 0 {
             self.knives = 0;
         }
-        if !a.eligible {
+        if !a.eligible || blocked {
             self.cancel();
             return;
         }

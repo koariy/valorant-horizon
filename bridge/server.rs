@@ -600,6 +600,19 @@ impl World for Bridge<'_, '_> {
     fn quiet_effect(&mut self, target: Entity, name: &str, ticks: u32, amplifier: u8) -> bool {
         self.apply_status(target, name, ticks, amplifier, false)
     }
+    fn protection_state(&self, owner: u128) -> effects::Protection {
+        self.0
+            .native_server_players()
+            .iter()
+            .find(|p| p.uuid == owner)
+            .and_then(|p| {
+                effects::protections()
+                    .lock()
+                    .ok()
+                    .and_then(|all| all.get(&p.entity_id).copied())
+            })
+            .unwrap_or_default()
+    }
     fn protect(&mut self, owner: u128, mut state: effects::Protection) {
         if let Some(p) = self
             .0
@@ -633,6 +646,16 @@ impl World for Bridge<'_, '_> {
     }
 }
 impl Game<'_> {
+    pub(super) fn vh_control_locked(&self) -> bool {
+        let acting = self.native_acting_entity();
+        let id = if acting != 0 {
+            acting as i32
+        } else {
+            self.player.as_ref().map_or(0, |p| p.entity_id as i32)
+        };
+        effects::actions_locked(id)
+    }
+
     pub(super) fn vh_flush_barriers(&mut self) {
         let Some(level) = self.native_level(self.dim.id()) else {
             return;

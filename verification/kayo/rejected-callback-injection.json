@@ -1,0 +1,9 @@
+{
+  "code": "E_UNSUPPORTED_CONTROL_FLOW",
+  "message": "calls beneath a reference may change temporary lifetimes",
+  "file": "crates/horizon-client/src/entry.rs",
+  "mod_id": "valorant_horizon",
+  "injection_id": "downed_healing_guard",
+  "target": "horizon_client::entry::main_with",
+  "selector": "crate::native_client_hooks::install"
+}

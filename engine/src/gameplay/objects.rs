@@ -2,6 +2,10 @@ use super::{geometry::*, *};
 use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum ObjectKind {
+    Fragment,
+    FlashDrive,
+    SuppressionBlade,
+    KayoCore,
     LightCluster,
     LightBeacon,
     LightPath,
@@ -66,7 +70,10 @@ impl ObjectKind {
     pub fn damageable(self) -> bool {
         !matches!(
             self,
-            Self::LightCluster
+            Self::Fragment
+                | Self::FlashDrive
+                | Self::KayoCore
+                | Self::LightCluster
                 | Self::LightBeacon
                 | Self::LightPath
                 | Self::RelayBolt
@@ -80,7 +87,11 @@ impl ObjectKind {
     pub fn is_advanced(self) -> bool {
         matches!(
             self,
-            Self::LightCluster
+            Self::Fragment
+                | Self::FlashDrive
+                | Self::SuppressionBlade
+                | Self::KayoCore
+                | Self::LightCluster
                 | Self::LightBeacon
                 | Self::LightPath
                 | Self::Trapwire
@@ -206,7 +217,11 @@ impl Object {
             };
         }
         let (width, height) = match self.kind {
-            ObjectKind::LightCluster
+            ObjectKind::Fragment
+            | ObjectKind::FlashDrive
+            | ObjectKind::SuppressionBlade
+            | ObjectKind::KayoCore
+            | ObjectKind::LightCluster
             | ObjectKind::LightBeacon
             | ObjectKind::LightPath
             | ObjectKind::Trapwire

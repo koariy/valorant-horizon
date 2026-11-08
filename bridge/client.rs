@@ -220,6 +220,39 @@ impl Game<'_> {
                 projectiles::beam,
                 smoke::orb,
             };
+            if matches!(
+                object.kind,
+                K::Fragment | K::FlashDrive | K::SuppressionBlade | K::KayoCore
+            ) {
+                let center = add(
+                    object.position,
+                    [
+                        0.,
+                        if matches!(object.kind, K::KayoCore) {
+                            0.9
+                        } else {
+                            0.1
+                        },
+                        0.,
+                    ],
+                );
+                let color = if matches!(object.kind, K::FlashDrive) {
+                    [240, 235, 180, 240]
+                } else {
+                    [150, 90, 240, 210]
+                };
+                for q in orb(
+                    sub(center, draw.camera),
+                    if matches!(object.kind, K::KayoCore) {
+                        0.45
+                    } else {
+                        0.15
+                    },
+                ) {
+                    self.native_world_quad(draw, "horizon/white", q, [0., 0., 16., 16.], color);
+                }
+                continue;
+            }
             if matches!(object.kind, K::LightCluster | K::LightBeacon | K::LightPath) {
                 if matches!(object.kind, K::LightPath) {
                     let width = ((30_f64 - f64::from(object.ticks)) / 5.).clamp(0.1, 3.);
@@ -461,6 +494,11 @@ impl Game<'_> {
                     quad,
                     [0.0, 0.0, 16.0, 16.0],
                     match object.kind {
+                        valorant_horizon_engine::gameplay::objects::ObjectKind::Fragment |
+                        valorant_horizon_engine::gameplay::objects::ObjectKind::FlashDrive |
+                        valorant_horizon_engine::gameplay::objects::ObjectKind::SuppressionBlade |
+                        valorant_horizon_engine::gameplay::objects::ObjectKind::KayoCore => [150,90,240,210],
+
                         valorant_horizon_engine::gameplay::objects::ObjectKind::LightCluster
                         | valorant_horizon_engine::gameplay::objects::ObjectKind::LightBeacon
                         | valorant_horizon_engine::gameplay::objects::ObjectKind::LightPath => {

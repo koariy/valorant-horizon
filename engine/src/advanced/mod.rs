@@ -2,7 +2,9 @@
 pub mod cypher;
 pub mod fade;
 pub mod iso;
+pub mod kayo;
 pub mod neon;
+pub mod throwable;
 mod trace;
 pub mod walking;
 pub mod waylay;
@@ -114,6 +116,7 @@ pub struct Context<'a, W: World> {
     pub vision: &'a mut std::collections::HashMap<u128, effects::Vision>,
     pub corpses: &'a mut Vec<Corpse>,
     pub kills: &'a mut Vec<(u128, Entity)>,
+    pub controls: &'a mut control::Ledger,
     pub vulnerable: &'a mut std::collections::HashMap<Entity, u32>,
     pub shields: &'a mut Vec<shields::Shield>,
     pub divides: &'a [divide::Divide],
@@ -182,7 +185,10 @@ impl<W: World> Context<'_, W> {
         }
     }
     pub fn hurt(&mut self, owner: u128, target: Entity, damage: f32) {
-        let h = self.world.hurt(owner, target, damage);
+        self.hurt_with(owner, target, damage, "minecraft:arrow");
+    }
+    pub fn hurt_with(&mut self, owner: u128, target: Entity, damage: f32, kind: &str) {
+        let h = self.world.hurt_with(owner, target, damage, kind);
         if h.killed && self.kills.len() < 128 {
             self.kills.push((owner, target));
         }
@@ -372,6 +378,9 @@ pub trait Agent {
     fn activate(&mut self, slot: usize, a: &Actor, c: &mut Context<'_, impl World>) -> bool;
     fn fire(&mut self, alt: bool, a: &Actor, c: &mut Context<'_, impl World>) -> bool;
     fn tick(&mut self, a: &Actor, c: &mut Context<'_, impl World>);
+    fn suppress(&mut self) {
+        self.cancel();
+    }
     fn cancel(&mut self) {
         self.core_mut().cancel();
     }
@@ -434,6 +443,7 @@ macro_rules! kits{($(($index:literal,$field:ident,$name:literal,$ty:path)),+ $(,
  impl Expansion{
  pub fn slots(&self,i:usize)->[Runtime;4]{match i{$($index=>self.$field.core().slots,)+_=>[Runtime::default();4]}}
  pub fn busy(&self)->bool{$(self.$field.busy())||+}
+ pub fn suppress(&mut self,i:usize){match i{$($index=>self.$field.suppress(),)+_=>{}}}
  pub fn cancel(&mut self){$(self.$field.cancel();)+}
  pub fn leave(&mut self){$(self.$field.leave();)+}
  pub fn owns(&self,i:usize,id:u64)->bool{match i{$($index=>self.$field.owns(id),)+_=>false}}
@@ -461,4 +471,5 @@ kits!(
     (15, yoru, "Yoru", yoru::Yoru),
     (16, iso, "Iso", iso::Iso),
     (17, waylay, "Waylay", waylay::Waylay),
+    (18, kayo, "KAY/O", kayo::Kayo),
 );

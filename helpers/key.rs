@@ -13,6 +13,9 @@ fn valorant_key(game: &mut crate::game::Game<'_>, key: &str, pressed: bool) {
     let bindings: [String; 4] =
         std::array::from_fn(|i| game.native_mod_key(ID, NAMES[i], DEFAULTS[i]));
     if !pressed {
+        if key == "key.keyboard.r" {
+            game.vh_send(Action::Stabilize(false));
+        }
         if let Ok(mut s) = state().lock() {
             if key == "key.mouse.left" {
                 s.key_transition("ability.attack", false);
@@ -130,6 +133,9 @@ fn valorant_key(game: &mut crate::game::Game<'_>, key: &str, pressed: bool) {
                 action = Some(Action::Select(i));
                 save = Some(s.registry.agents()[i].id);
             }
+        } else if key == "key.keyboard.r" && s.snapshot.as_ref().is_some_and(|x| x.stabilize) {
+            s.consumed = Some(key.into());
+            action = Some(Action::Stabilize(true));
         } else if key == "key.keyboard.r" && (s.selected == 8 || s.selected >= 12) {
             s.consumed = Some(key.into());
             action = Some(Action::Recall);

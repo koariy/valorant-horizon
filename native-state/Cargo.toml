@@ -1,0 +1,5 @@
+[package]
+name = "valorant-horizon-native-state"
+version = "0.4.0-dev.7"
+edition = "2024"
+license = "MIT"

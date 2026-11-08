@@ -1,3 +1,4 @@
+pub mod stabilize;
 use crate::{
     agents::jett::Jett,
     gameplay::{geometry::*, projectiles::*, smoke::Smoke, *},
@@ -29,6 +30,21 @@ pub struct Player {
     pub error: Option<String>,
 }
 impl Player {
+    pub fn suppress(&mut self) {
+        self.extra.suppress(self.agent);
+        self.sova.cancel();
+        self.clove.cancel();
+        self.harbor.cancel();
+        self.astra.cancel();
+        self.viper.suppress();
+        self.brimstone.cancel();
+        self.jett.cancel();
+        self.phoenix.cancel();
+        self.sage.cancel();
+        self.omen.cancel();
+        self.raze.cancel();
+        self.reyna.cancel();
+    }
     pub fn change_dimension(&mut self) {
         self.cancel();
         self.phoenix.anchor = None;
@@ -75,6 +91,8 @@ impl Player {
 #[derive(Default)]
 pub struct Session {
     pub players: HashMap<u128, Player>,
+    pub stabilizers: HashMap<u128, stabilize::Channel>,
+    pub stabilize_targets: HashMap<u128, u128>,
     pub corpses: Vec<crate::advanced::Corpse>,
     pub budget: crate::advanced::Budget,
     pub extra_kills: Vec<(u128, Entity)>,
@@ -85,6 +103,7 @@ pub struct Session {
     pub toxins: Vec<toxin::Field>,
     pub shields: Vec<shields::Shield>,
     pub divides: Vec<crate::gameplay::divide::Divide>,
+    pub controls: control::Ledger,
     pub vulnerable: HashMap<Entity, u32>,
     pub decay: HashMap<Entity, toxin::Decay>,
     pub decay_loaded: bool,
@@ -133,6 +152,24 @@ impl Session {
             self.decay_loaded = true;
         }
         let actors = w.actors();
+        // Remove only our previous channel overlay; kit ticks reassert their own protection.
+        // Old kits without a Protection tick must also regain ordinary interaction on release.
+        for id in self.stabilizers.keys() {
+            let mut state = w.protection_state(*id);
+            state.disarmed = false;
+            w.protect(*id, state);
+        }
+        control::tick(&mut self.controls);
+        for (entity, state) in &mut self.controls {
+            if state.blocked() && !state.applied {
+                if let Entity::Player(id) = entity
+                    && let Some(p) = self.players.get_mut(id)
+                {
+                    p.suppress();
+                }
+                state.applied = true;
+            }
+        }
         for (owner, target) in w.hit_credits() {
             if let Some(p) = self.players.get_mut(&owner) {
                 p.extra.damage(p.agent, target);
@@ -227,6 +264,7 @@ impl Session {
                             vision: &mut self.vision,
                             corpses: &mut self.corpses,
                             kills: &mut self.extra_kills,
+                            controls: &mut self.controls,
                             vulnerable: &mut self.vulnerable,
                             shields: &mut self.shields,
                             divides: &self.divides,
@@ -332,6 +370,30 @@ impl Session {
             {
                 continue;
             }
+            if let Action::Stabilize(held) = r.action {
+                let okay = self.hold_stabilization(w, a, &actors, held);
+                if let Some(p) = self.players.get_mut(&id) {
+                    p.error = (!okay).then(|| "No eligible ally to stabilize".into());
+                }
+                continue;
+            }
+            if matches!(r.action, Action::Cancel) {
+                self.stabilizers.remove(&id);
+            }
+            let passive = matches!(r.action, Action::Cancel)
+                || matches!(r.action,Action::Select(i) if i==p.agent);
+            if self.stabilizers.contains_key(&id) && !passive {
+                p.error = Some("Stabilizing ally: release R to act".into());
+                continue;
+            }
+            if self.controls.get(&a.entity).is_some_and(|s| s.blocked()) && !passive {
+                p.error = Some("Abilities suppressed".into());
+                continue;
+            }
+            if w.protection_state(id).downed && !passive {
+                p.error = Some("Downed: ally stabilization required".into());
+                continue;
+            }
             let okay = match r.action {
                 Action::Select(index) if index < 12 + crate::advanced::COUNT => {
                     if p.agent == index {
@@ -356,7 +418,7 @@ impl Session {
                         true
                     }
                 }
-                Action::Select(_) => false,
+                Action::Select(_) | Action::Stabilize(_) => false,
                 Action::Activate(slot) => {
                     if p.agent >= 12 {
                         p.extra.activate(
@@ -377,6 +439,7 @@ impl Session {
                                 vision: &mut self.vision,
                                 corpses: &mut self.corpses,
                                 kills: &mut self.extra_kills,
+                                controls: &mut self.controls,
                                 vulnerable: &mut self.vulnerable,
                                 shields: &mut self.shields,
                                 divides: &self.divides,
@@ -458,6 +521,7 @@ impl Session {
                         vision: &mut self.vision,
                         corpses: &mut self.corpses,
                         kills: &mut self.extra_kills,
+                        controls: &mut self.controls,
                         vulnerable: &mut self.vulnerable,
                         shields: &mut self.shields,
                         divides: &self.divides,
@@ -530,6 +594,7 @@ impl Session {
                                 vision: &mut self.vision,
                                 corpses: &mut self.corpses,
                                 kills: &mut self.extra_kills,
+                                controls: &mut self.controls,
                                 vulnerable: &mut self.vulnerable,
                                 shields: &mut self.shields,
                                 divides: &self.divides,
@@ -650,6 +715,7 @@ impl Session {
                         vision: &mut self.vision,
                         corpses: &mut self.corpses,
                         kills: &mut self.extra_kills,
+                        controls: &mut self.controls,
                         vulnerable: &mut self.vulnerable,
                         shields: &mut self.shields,
                         divides: &self.divides,
@@ -734,6 +800,7 @@ impl Session {
                             vision: &mut self.vision,
                             corpses: &mut self.corpses,
                             kills: &mut self.extra_kills,
+                            controls: &mut self.controls,
                             vulnerable: &mut self.vulnerable,
                             shields: &mut self.shields,
                             divides: &self.divides,
@@ -770,7 +837,11 @@ impl Session {
                 } else if p.agent == 6 {
                     p.brimstone.tick(a.eligible);
                 } else if p.agent == 0 {
-                    p.jett.tick(a, w);
+                    p.jett.tick_controlled(
+                        a,
+                        w,
+                        self.controls.get(&a.entity).is_some_and(|c| c.blocked()),
+                    );
                 } else if p.agent == 1 {
                     p.sage.tick(a, w);
                 } else if p.agent == 3 {
@@ -881,6 +952,7 @@ impl Session {
                 }
             }
         }
+        self.tick_stabilization(w, &actors);
         self.objects.retain(|o| {
             o.ticks > 0
                 && (o.health > 0.0
@@ -1650,6 +1722,13 @@ impl Session {
             p.phoenix.slots
         };
         Some(Snapshot {
+            suppressed: self
+                .controls
+                .get(&Entity::Player(id))
+                .map_or(0, |c| c.suppressed),
+            stabilize: self.stabilize_targets.contains_key(&id),
+            stabilizing: self.stabilization_progress(id),
+
             agent: p.agent,
             kit: p.extra.stats(p.agent),
             hidden_entities: self

@@ -91,13 +91,16 @@ impl Viper {
             || self.pit.is_some()
             || self.fuel < 100.
     }
-    pub fn cancel(&mut self) {
+    pub fn suppress(&mut self) {
         if self.cloud_on || self.screen_on {
             self.recovery = 20;
         }
         self.equipped = None;
         self.cloud_on = false;
         self.screen_on = false;
+    }
+    pub fn cancel(&mut self) {
+        self.suppress();
         self.pit = None;
         self.pit_ticks = 0;
     }

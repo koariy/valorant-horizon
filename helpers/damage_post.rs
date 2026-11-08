@@ -10,6 +10,9 @@ fn valorant_damage_post(causing: i32, entity: i32, amount: f32) {
     if let Ok(mut all) = valorant_horizon_engine::gameplay::effects::protections().lock()
         && let Some(p) = all.get_mut(&entity)
     {
+        if amount > 0. {
+            p.hurt_epoch = p.hurt_epoch.wrapping_add(1);
+        }
         p.health = (p.health - amount).max(0.0);
     }
 }

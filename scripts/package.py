@@ -15,6 +15,7 @@ files += sorted((root / "engine/src").rglob("*.rs"))
 files += sorted((root / "helpers").glob("*.rs"))
 files += sorted((root / "bridge").glob("*.rs"))
 files += [root / "spatial/Cargo.toml", *sorted((root / "spatial/src").rglob("*.rs"))]
+files += [root / "native-state/Cargo.toml", *sorted((root / "native-state/src").rglob("*.rs"))]
 out = root / f"dist/valorant_horizon-{version}.hnmod"
 out.parent.mkdir(exist_ok=True)
 with zipfile.ZipFile(out, "w", compression=zipfile.ZIP_DEFLATED) as archive:

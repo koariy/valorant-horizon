@@ -1,6 +1,7 @@
 //! Authoritative simulation. This trait is ours, not an invented Horizon API.
 pub mod barrier;
 pub mod combat;
+pub mod control;
 pub mod deaths;
 pub mod divide;
 pub mod effects;
@@ -149,6 +150,9 @@ pub trait World {
     fn quiet_effect(&mut self, target: Entity, name: &str, ticks: u32, amplifier: u8) -> bool {
         self.effect(target, name, ticks, amplifier)
     }
+    fn protection_state(&self, _owner: u128) -> effects::Protection {
+        effects::Protection::default()
+    }
     fn protect(&mut self, _owner: u128, _state: effects::Protection) {}
     fn return_requested(&self, _owner: u128) -> bool {
         false
@@ -174,12 +178,16 @@ pub enum Action {
     Fire(bool),
     Cancel,
     Recall,
+    Stabilize(bool),
     Aim(i8, i8),
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Snapshot {
     pub agent: usize,
     pub kit: [u32; 4],
+    pub suppressed: u32,
+    pub stabilize: bool,
+    pub stabilizing: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub hidden_entities: Vec<u32>,
     pub contacts: Vec<recon::Contact>,

@@ -27,7 +27,7 @@ fn maximal_snapshot_fits_native_payload_budget() {
             last_hit: None,
             id: u64::MAX,
             owner: u128::MAX,
-            kind: ObjectKind::LightCluster,
+            kind: ObjectKind::SuppressionBlade,
             position: at,
             health: 6.,
             ticks: u32::MAX,
@@ -123,6 +123,9 @@ fn maximal_snapshot_fits_native_payload_budget() {
     snapshot.vision.deafen = u32::MAX;
     snapshot.bow_charge = Some(u32::MAX);
     snapshot.kit = [u32::MAX; 4];
+    snapshot.suppressed = u32::MAX;
+    snapshot.stabilize = true;
+    snapshot.stabilizing = u32::MAX;
     snapshot.hidden_entities = vec![u32::MAX; 64];
     snapshot.bounces = u8::MAX;
     snapshot.fury_shots = u8::MAX;

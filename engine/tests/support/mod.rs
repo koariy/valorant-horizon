@@ -37,6 +37,7 @@ pub struct TestWorld {
     pub wall: Option<Box3>,
     pub requested: bool,
     pub effects: Vec<(Entity, String)>,
+    pub effect_details: Vec<(Entity, String, u32, u8)>,
     pub damage: Vec<(Entity, f32, String)>,
 }
 impl Default for TestWorld {
@@ -58,6 +59,7 @@ impl Default for TestWorld {
             wall: None,
             requested: false,
             effects: vec![],
+            effect_details: vec![],
             damage: vec![],
         }
     }
@@ -192,6 +194,12 @@ impl World for TestWorld {
         }
     }
     fn heal(&mut self, t: Entity, d: f32) -> bool {
+        if let Entity::Player(id) = t
+            && self.protection_state(id).downed
+        {
+            return false;
+        }
+
         let Some(a) = self
             .actors
             .iter_mut()
@@ -201,6 +209,9 @@ impl World for TestWorld {
         };
         a.health = (a.health + d).min(a.max_health);
         true
+    }
+    fn protection_state(&self, owner: u128) -> effects::Protection {
+        self.protections.get(&owner).copied().unwrap_or_default()
     }
     fn protect(&mut self, id: u128, p: effects::Protection) {
         let p = effects::merge_protection(self.protections.get(&id).copied(), p);
@@ -215,11 +226,12 @@ impl World for TestWorld {
             _ => false,
         }
     }
-    fn effect(&mut self, t: Entity, name: &str, _: u32, _: u8) -> bool {
+    fn effect(&mut self, t: Entity, name: &str, ticks: u32, amplifier: u8) -> bool {
         if self.status_immune(t) && effects::hostile_status(name) {
             return false;
         }
         self.effects.push((t, name.into()));
+        self.effect_details.push((t, name.into(), ticks, amplifier));
         true
     }
     fn vulnerability(&mut self, target: Entity, active: bool) {
