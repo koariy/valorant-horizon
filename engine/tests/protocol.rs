@@ -58,7 +58,7 @@ fn maximal_snapshot_fits_native_payload_budget() {
     s.zones = vec![
         Zone {
             owner: u128::MAX,
-            kind: ZoneKind::Incendiary,
+            kind: ZoneKind::ElectricPulse,
             ticks: u32::MAX,
             bounds: Box3 { min: at, max: at }
         };

@@ -149,6 +149,12 @@ impl Game<'_> {
                     [0.0, 0.0, 16.0, 16.0],
                     if matches!(
                         zone.kind,
+                        valorant_horizon_engine::gameplay::zones::ZoneKind::ElectricWall
+                            | valorant_horizon_engine::gameplay::zones::ZoneKind::ElectricPulse
+                    ) {
+                        [35, 185, 255, 255]
+                    } else if matches!(
+                        zone.kind,
                         valorant_horizon_engine::gameplay::zones::ZoneKind::Seize
                             | valorant_horizon_engine::gameplay::zones::ZoneKind::Nightfall
                     ) {
@@ -310,6 +316,9 @@ impl Game<'_> {
                     quad,
                     [0.0, 0.0, 16.0, 16.0],
                     match object.kind {
+                        valorant_horizon_engine::gameplay::objects::ObjectKind::RelayBolt => {
+                            [80, 215, 255, 255]
+                        }
                         valorant_horizon_engine::gameplay::objects::ObjectKind::HauntOrb
                         | valorant_horizon_engine::gameplay::objects::ObjectKind::SeizeOrb
                         | valorant_horizon_engine::gameplay::objects::ObjectKind::Haunt
@@ -531,6 +540,7 @@ impl Game<'_> {
                     matches!(
                         z.kind,
                         valorant_horizon_engine::gameplay::zones::ZoneKind::CyberCage
+                            | valorant_horizon_engine::gameplay::zones::ZoneKind::ElectricWall
                     ) && z.touches(valorant_horizon_engine::gameplay::geometry::Box3 {
                         min: camera.map(|n| n - 0.01),
                         max: camera.map(|n| n + 0.01),

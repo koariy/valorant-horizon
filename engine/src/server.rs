@@ -222,6 +222,8 @@ impl Session {
                             vision: &mut self.vision,
                             corpses: &mut self.corpses,
                             kills: &mut self.extra_kills,
+                            shields: &mut self.shields,
+                            divides: &self.divides,
                             decay: self.decay_loaded.then_some(&mut self.decay),
                             budget: &mut self.budget,
                         },
@@ -369,6 +371,8 @@ impl Session {
                                 vision: &mut self.vision,
                                 corpses: &mut self.corpses,
                                 kills: &mut self.extra_kills,
+                                shields: &mut self.shields,
+                                divides: &self.divides,
                                 decay: self.decay_loaded.then_some(&mut self.decay),
                                 budget: &mut self.budget,
                             },
@@ -447,6 +451,8 @@ impl Session {
                         vision: &mut self.vision,
                         corpses: &mut self.corpses,
                         kills: &mut self.extra_kills,
+                        shields: &mut self.shields,
+                        divides: &self.divides,
                         decay: self.decay_loaded.then_some(&mut self.decay),
                         budget: &mut self.budget,
                     },
@@ -516,6 +522,8 @@ impl Session {
                                 vision: &mut self.vision,
                                 corpses: &mut self.corpses,
                                 kills: &mut self.extra_kills,
+                                shields: &mut self.shields,
+                                divides: &self.divides,
                                 decay: self.decay_loaded.then_some(&mut self.decay),
                                 budget: &mut self.budget,
                             },
@@ -633,6 +641,8 @@ impl Session {
                         vision: &mut self.vision,
                         corpses: &mut self.corpses,
                         kills: &mut self.extra_kills,
+                        shields: &mut self.shields,
+                        divides: &self.divides,
                         decay: self.decay_loaded.then_some(&mut self.decay),
                         budget: &mut self.budget,
                     },
@@ -712,6 +722,8 @@ impl Session {
                             vision: &mut self.vision,
                             corpses: &mut self.corpses,
                             kills: &mut self.extra_kills,
+                            shields: &mut self.shields,
+                            divides: &self.divides,
                             decay: self.decay_loaded.then_some(&mut self.decay),
                             budget: &mut self.budget,
                         },
@@ -899,8 +911,29 @@ impl Session {
             zone.ticks = zone.ticks.saturating_sub(1);
             if matches!(
                 zone.kind,
-                zones::ZoneKind::CyberCage | zones::ZoneKind::Seize | zones::ZoneKind::Nightfall
+                zones::ZoneKind::CyberCage
+                    | zones::ZoneKind::Seize
+                    | zones::ZoneKind::Nightfall
+                    | zones::ZoneKind::ElectricPulse
             ) {
+                continue;
+            }
+            if matches!(zone.kind, zones::ZoneKind::ElectricWall) {
+                if zone.ticks.is_multiple_of(10) {
+                    for a in actors
+                        .iter()
+                        .filter(|a| a.eligible && zone.touches(a.bounds))
+                    {
+                        if w.recon_target(zone.owner, a.entity)
+                            && affected.insert((zone.owner, a.entity))
+                        {
+                            let hit = w.hurt(zone.owner, a.entity, 2.);
+                            if hit.killed {
+                                zone_kills.push((zone.owner, a.entity));
+                            }
+                        }
+                    }
+                }
                 continue;
             }
             if matches!(
@@ -1009,6 +1042,8 @@ impl Session {
                     zones::ZoneKind::CyberCage
                         | zones::ZoneKind::Seize
                         | zones::ZoneKind::Nightfall
+                        | zones::ZoneKind::ElectricPulse
+                        | zones::ZoneKind::ElectricWall
                 ) || self
                     .players
                     .get(&z.owner)
@@ -1558,6 +1593,7 @@ impl Session {
             self.credited.pop_front();
         }
         if let Some(p) = self.players.get_mut(&owner) {
+            p.extra.kill(p.agent);
             if p.agent == 4 {
                 p.raze.kill();
             } else if p.agent == 0 {

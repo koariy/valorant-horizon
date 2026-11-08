@@ -18,6 +18,12 @@ pub struct Shield {
     pub spent: bool,
 }
 impl Shield {
+    pub fn damage(&mut self, amount: f32) {
+        self.health = (self.health - amount.max(0.)).max(0.);
+        if self.health == 0. {
+            self.active = false;
+        }
+    }
     pub fn crossing(&self, from: V3, to: V3) -> Option<f64> {
         if !self.active || self.health <= 0. || self.ticks == 0 {
             return None;
@@ -70,10 +76,7 @@ fn intercept_until(
         .min_by(|a, b| a.1.total_cmp(&b.1));
     if let Some((i, _)) = hit {
         let s = &mut shields[i];
-        s.health = (s.health - damage.max(0.)).max(0.);
-        if s.health == 0. {
-            s.active = false;
-        }
+        s.damage(damage);
         true
     } else {
         false

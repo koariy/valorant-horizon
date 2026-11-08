@@ -2,6 +2,7 @@ use super::{geometry::*, *};
 use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum ObjectKind {
+    RelayBolt,
     HauntOrb,
     SeizeOrb,
     Haunt,
@@ -34,6 +35,9 @@ pub struct Object {
     pub target: Option<Entity>,
 }
 impl ObjectKind {
+    pub fn damageable(self) -> bool {
+        !matches!(self, Self::RelayBolt)
+    }
     pub fn is_advanced(self) -> bool {
         matches!(
             self,
@@ -44,11 +48,15 @@ impl ObjectKind {
                 | Self::SeizeOrb
                 | Self::Haunt
                 | Self::Prowler
+                | Self::RelayBolt
         )
     }
 }
 impl Object {
     pub fn hit(&self, from: V3, to: V3, padding: f64) -> Option<f64> {
+        if !self.kind.damageable() {
+            return None;
+        }
         if !matches!(self.kind, ObjectKind::Trapwire) {
             return self.bounds().expanded(padding).segment(from, to);
         }
@@ -82,6 +90,7 @@ impl Object {
             | ObjectKind::SeizeOrb
             | ObjectKind::Haunt
             | ObjectKind::Prowler => (0.25, 0.5),
+            ObjectKind::RelayBolt => (0.1, 0.2),
             ObjectKind::Drone => (0.15, 0.3),
             ObjectKind::ReconBolt => (0.12, 0.25),
             ObjectKind::Soul => (0.15, 0.3),

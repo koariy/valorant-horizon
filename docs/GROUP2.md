@@ -59,3 +59,5 @@ Settings в agents/brimstone.rs задают дальность и сроки; D
 Этап 0.4.0-dev.1: Cypher реализован и прошёл 15 отдельных тестов, общие 137 Rust-тестов и нативную сборку. См. docs/CYPHER.md и verification/cypher/RESULTS.md. Меню теперь имеет страницы. Следующий агент — Fade; предыдущие записи описывают исторические этапы.
 
 Этап 0.4.0-dev.2: Fade добавлена после проходящего этапа Cypher. Haunt, Seize, Prowler и Nightfall используют общие Object/Zone/Intel/Decay, приватные следы и renderer audio adapter. Тесты и границы проверки — docs/FADE.md, verification/fade/RESULTS.md. Эта группа теперь представлена всеми восемью агентами; Clove Not Dead Yet остаётся отключённой, остальные ограничения указаны в документации.
+
+Этап 0.4.0-dev.3: Neon прошла 16 собственных и общие 182 теста, нативную проверку и полную сборку. См. docs/NEON.md, verification/neon/RESULTS.md. Следующий этап — Yoru.

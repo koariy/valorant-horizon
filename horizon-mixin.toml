@@ -1,6 +1,6 @@
 [mod]
 id = "valorant_horizon"
-version = "0.4.0-dev.2"
+version = "0.4.0-dev.3"
 
 [compatibility]
 horizon_revision = "41f822b659789780f58d32c63ddfb6887ea1b8bf"

@@ -26,6 +26,8 @@ pub struct Scene {
     pub vision: std::collections::HashMap<u128, Vision>,
     pub corpses: Vec<advanced::Corpse>,
     pub kills: Vec<(u128, Entity)>,
+    pub shields: Vec<shields::Shield>,
+    pub divides: Vec<divide::Divide>,
     pub decay: std::collections::HashMap<Entity, toxin::Decay>,
     pub budget: advanced::Budget,
 }
@@ -46,6 +48,8 @@ impl Scene {
             vision: &mut self.vision,
             corpses: &mut self.corpses,
             kills: &mut self.kills,
+            shields: &mut self.shields,
+            divides: &self.divides,
             decay: Some(&mut self.decay),
             budget: &mut self.budget,
         }

@@ -169,6 +169,14 @@ impl State {
             lines.push(info.clone());
         }
         if let Some(snapshot) = &self.snapshot {
+            if self.selected == 14 {
+                lines.push(format!(
+                    "Energy: {}% | slide: {} | Overdrive: {:.1}s",
+                    snapshot.kit[0],
+                    snapshot.kit[1],
+                    snapshot.kit[2] as f32 / 20.
+                ));
+            }
             if self.selected == 13 {
                 lines.push(format!(
                     "Prowlers: {} | Seize: {} | Haunts: {} | Nightfall: {}",

@@ -2,6 +2,8 @@ use super::geometry::*;
 use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum ZoneKind {
+    ElectricWall,
+    ElectricPulse,
     Seize,
     Nightfall,
     CyberCage,
@@ -31,7 +33,10 @@ impl Zone {
         if !self.bounds.intersects(b) {
             return false;
         }
-        if matches!(self.kind, ZoneKind::FireWall | ZoneKind::WaterWall) {
+        if matches!(
+            self.kind,
+            ZoneKind::FireWall | ZoneKind::WaterWall | ZoneKind::ElectricWall
+        ) {
             return true;
         }
         let cx = (self.bounds.min[0] + self.bounds.max[0]) * 0.5;

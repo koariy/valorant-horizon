@@ -46,7 +46,7 @@ pub fn apply(w: &mut impl World, objects: &mut Vec<Object>, e: Explosion) -> Vec
         );
         w.push_entity(a.entity, add(a.velocity, force));
     }
-    for o in objects.iter_mut() {
+    for o in objects.iter_mut().filter(|o| o.kind.damageable()) {
         let point = add(o.position, [0.0, 0.2, 0.0]);
         let d = distance(e.position, point);
         if d < e.radius && block_hit(w, e.position, point, 0.0).is_none() {

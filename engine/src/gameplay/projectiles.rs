@@ -108,40 +108,88 @@ pub fn intercept(
     objects: &mut [super::objects::Object],
     shot: Shot,
 ) -> bool {
-    use super::shields;
-    let Shot {
-        from,
-        to,
-        damage,
-        padding,
-    } = shot;
-    let limit = shields::impact_limit(w, from, to, padding);
-    let barrier = shields
-        .iter()
-        .filter_map(|s| s.crossing(from, to))
-        .chain(
-            walls
-                .iter()
-                .filter(|d| d.ticks > 0)
-                .filter_map(|d| d.crossing(from, to)),
-        )
-        .fold(limit, f64::min);
-    let hit = objects
+    let limit = super::shields::impact_limit(w, shot.from, shot.to, shot.padding);
+    if let Some(hit) = utility_hit(shields, walls, objects, shot.from, shot.to, limit) {
+        apply_utility(hit.hit, shields, objects, shot.damage);
+        true
+    } else {
+        false
+    }
+}
+#[derive(Clone, Copy)]
+pub enum UtilityHit {
+    Object(usize),
+    Shield(usize),
+    Divide,
+}
+pub struct UtilityCollision {
+    pub time: f64,
+    pub hit: UtilityHit,
+}
+/// Shared nearest-hit policy for native projectiles and budgeted ability rays.
+/// The caller supplies the first terrain/actor boundary to avoid duplicate traces.
+pub fn utility_hit(
+    shields: &[super::shields::Shield],
+    walls: &[super::divide::Divide],
+    objects: &[super::objects::Object],
+    from: V3,
+    to: V3,
+    limit: f64,
+) -> Option<UtilityCollision> {
+    let mut nearest = None;
+    let mut boundary = limit;
+    for d in walls.iter().filter(|d| d.ticks > 0) {
+        if let Some(t) = d.crossing(from, to)
+            && t <= boundary
+        {
+            boundary = t;
+            nearest = Some(UtilityCollision {
+                time: t,
+                hit: UtilityHit::Divide,
+            });
+        }
+    }
+    for (i, s) in shields.iter().enumerate() {
+        if let Some(t) = s.crossing(from, to)
+            && t <= boundary
+        {
+            boundary = t;
+            nearest = Some(UtilityCollision {
+                time: t,
+                hit: UtilityHit::Shield(i),
+            });
+        }
+    }
+    for (i, o) in objects
         .iter()
         .enumerate()
         .filter(|(_, o)| o.health > 0. && o.ticks > 0)
-        .filter_map(|(i, o)| {
-            o.hit(from, to, 0.08)
-                .filter(|t| *t < barrier)
-                .map(|t| (i, t))
-        })
-        .min_by(|a, b| a.1.total_cmp(&b.1));
-    if let Some((i, _)) = hit {
-        objects[i].health = (objects[i].health - damage.max(0.)).max(0.);
-        return true;
+    {
+        if let Some(t) = o.hit(from, to, 0.08)
+            && t < boundary
+        {
+            boundary = t;
+            nearest = Some(UtilityCollision {
+                time: t,
+                hit: UtilityHit::Object(i),
+            });
+        }
     }
-    shields::intercept_barriers(w, shields, walls, from, to, damage, padding)
+    nearest
 }
+pub fn apply_utility(
+    hit: UtilityHit,
+    shields: &mut [super::shields::Shield],
+    objects: &mut [super::objects::Object],
+    damage: f32,
+) {
+    match hit {
+        UtilityHit::Object(i) => objects[i].health = (objects[i].health - damage.max(0.)).max(0.),
+        UtilityHit::Shield(i) => shields[i].damage(damage),
+        UtilityHit::Divide => {}
+    }
+}
+
 /// Double-sided beam surfaces; coordinates may already be camera-relative.
 pub fn beam(from: V3, to: V3, width: f64) -> Vec<[[f32; 3]; 4]> {
     let d = unit(sub(to, from));

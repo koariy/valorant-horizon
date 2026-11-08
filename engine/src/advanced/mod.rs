@@ -1,6 +1,8 @@
 //! Additional kits share the existing authoritative World and resource pools.
 pub mod cypher;
 pub mod fade;
+pub mod neon;
+mod trace;
 use crate::{
     abilities::{Ability, Runtime},
     gameplay::{
@@ -108,27 +110,14 @@ pub struct Context<'a, W: World> {
     pub vision: &'a mut std::collections::HashMap<u128, effects::Vision>,
     pub corpses: &'a mut Vec<Corpse>,
     pub kills: &'a mut Vec<(u128, Entity)>,
+    pub shields: &'a mut Vec<shields::Shield>,
+    pub divides: &'a [divide::Divide],
     pub decay: Option<&'a mut std::collections::HashMap<Entity, toxin::Decay>>,
     pub budget: &'a mut Budget,
 }
 impl<W: World> Context<'_, W> {
     pub fn visible(&mut self, from: V3, to: V3) -> bool {
-        // Bound both ray count and voxel work for long diagonal lines.
-        let parts = (distance(from, to) / 2.).ceil().max(1.) as u32;
-        if parts > 64 || parts > self.budget.rays {
-            return false;
-        }
-        self.budget.rays -= parts;
-        (0..parts).all(|i| {
-            let d = sub(to, from);
-            block_hit(
-                self.world,
-                add(from, scale(d, f64::from(i) / f64::from(parts))),
-                add(from, scale(d, f64::from(i + 1) / f64::from(parts))),
-                0.,
-            )
-            .is_none()
-        })
+        self.terrain_limit(from, to).is_none()
     }
 
     pub fn enemies(&mut self, owner: u128, at: V3, range: f64) -> Vec<Actor> {
@@ -341,6 +330,12 @@ pub trait Agent {
     fn stats(&self) -> [u32; 4] {
         [0; 4]
     }
+    fn inactive_tick(&mut self) {
+        self.leave();
+    }
+    fn busy(&self) -> bool {
+        self.core().busy()
+    }
     fn kill(&mut self) {}
     fn equipped(&self) -> bool {
         self.core().equipped.is_some() || self.camera().is_some()
@@ -353,7 +348,7 @@ macro_rules! kits{($(($index:literal,$field:ident,$name:literal,$ty:path)),+ $(,
  #[derive(Default)]pub struct Expansion{$(pub $field:$ty,)+}
  impl Expansion{
  pub fn slots(&self,i:usize)->[Runtime;4]{match i{$($index=>self.$field.core().slots,)+_=>[Runtime::default();4]}}
- pub fn busy(&self)->bool{$(self.$field.core().busy())||+}
+ pub fn busy(&self)->bool{$(self.$field.busy())||+}
  pub fn cancel(&mut self){$(self.$field.cancel();)+}
  pub fn leave(&mut self){$(self.$field.leave();)+}
  pub fn owns(&self,i:usize,id:u64)->bool{match i{$($index=>self.$field.owns(id),)+_=>false}}
@@ -368,10 +363,11 @@ macro_rules! kits{($(($index:literal,$field:ident,$name:literal,$ty:path)),+ $(,
  pub fn fire(&mut self,i:usize,alt:bool,a:&Actor,c:&mut Context<'_,impl World>)->bool{match i{$($index=>self.$field.fire(alt,a,c),)+_=>false}}
  pub fn release(&mut self,i:usize,a:&Actor,c:&mut Context<'_,impl World>)->bool{match i{$($index=>self.$field.release(a,c),)+_=>false}}
  pub fn recall(&mut self,i:usize,a:&Actor,c:&mut Context<'_,impl World>)->bool{match i{$($index=>self.$field.recall(a,c),)+_=>false}}
- pub fn tick(&mut self,i:usize,a:&Actor,c:&mut Context<'_,impl World>){match i{$($index=>{self.$field.core_mut().tick();if a.eligible{self.$field.tick(a,c);}else{self.$field.leave();}},)+_=>{}}if let Some(id)=owner(a){match i{$($index=>c.world.protect(id,self.$field.protection(a)),)+_=>{}}}}
+ pub fn tick(&mut self,i:usize,a:&Actor,c:&mut Context<'_,impl World>){match i{$($index=>{self.$field.core_mut().tick();if a.eligible{self.$field.tick(a,c);}else{self.$field.inactive_tick();}},)+_=>{}}if let Some(id)=owner(a){match i{$($index=>c.world.protect(id,self.$field.protection(a)),)+_=>{}}}}
  }
 };}
 kits!(
     (12, cypher, "Cypher", cypher::Cypher),
     (13, fade, "Fade", fade::Fade),
+    (14, neon, "Neon", neon::Neon),
 );
