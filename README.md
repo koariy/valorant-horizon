@@ -1,11 +1,13 @@
-# Valorant Horizon — тестовая сборка 0.4.0-dev.10
+# Valorant Horizon — тестовая сборка 0.5.0-dev.1
 
-Скачать: [valorant_horizon-0.4.0-dev.10.hnmod](valorant_horizon-0.4.0-dev.10.hnmod). Исходники: [valorant_horizon-0.4.0-dev.10-source.zip](valorant_horizon-0.4.0-dev.10-source.zip). Контрольные суммы: [SHA256SUMS.txt](SHA256SUMS.txt).
+Скачать: [valorant_horizon-0.5.0-dev.1.hnmod](valorant_horizon-0.5.0-dev.1.hnmod). Исходники: [valorant_horizon-0.5.0-dev.1-source.zip](valorant_horizon-0.5.0-dev.1-source.zip). [Контрольные суммы](SHA256SUMS.txt).
 
-Исходный commit `c286dd72cf3f46da28bd8ec2513af645b096c2b2`, ветка `feat/agents-expansion`. 22 агента из запрошенного списка; последовательно добавлены Cypher, Fade, Neon, Yoru, Iso, Waylay, KAY/O, Breach, Skye и Gekko.
+Исходный commit `da3836f128ed6bbc44a58b2c3e7d2d6d4946756e`, ветка `feat/agents-expansion`. 22 агента, общая система оформления, Low/Medium/High, оригинальные геометрические иконки, новый HUD, экран поиска/категорий/управления/локальных настроек. Инструкция: https://github.com/koariy/valorant-horizon/blob/da3836f128ed6bbc44a58b2c3e7d2d6d4946756e/docs/PRESENTATION.md
 
-331 Rust-тест, 14 Python-тестов, Clippy, нативная сборка Horizon и валидатор пакета прошли. Игровой мир/LAN/визуальные эффекты/звук ещё не проверены. Sage Resurrection, Clove Not Dead Yet и Iso Kill Contract отключены до соответствующих серверных интеграций. Подробный отчёт: https://github.com/koariy/valorant-horizon/blob/c286dd72cf3f46da28bd8ec2513af645b096c2b2/verification/expansion/RESULTS.md
+351 Rust-тест, 14 Python-тестов, Clippy, полная нативная сборка Horizon и валидатор пакета прошли. Все 110 файлов пакета совпадают с проверенными исходниками/стадией native build. Отчёт: https://github.com/koariy/valorant-horizon/blob/da3836f128ed6bbc44a58b2c3e7d2d6d4946756e/verification/presentation/RESULTS.md
 
-.hnmod содержит Rust-код: совместимый launcher пересобирает Horizon под систему пользователя. Это не готовый JAR/DLL и не ресурсный .hmod. Совместимость: Horizon client0.1.0/Minecraft26.3 commit41f822b659789780f58d32c63ddfb6887ea1b8bf, mixins0.6.0 commit5a64af938ec86b00d53d16a408aabc0038fb3e57. Проверена Linux x86_64 сборка без default features. Нужна совместимая сборка на сервере и у участников.
+Игровой мир/LAN/внешний вид/FPS/звук ещё не проверены. Прозрачность использует доступный проход Horizon с записью глубины; пересечения остаются приближёнными. Sage Resurrection, Clove Not Dead Yet и Iso Kill Contract отключены до соответствующих интеграций.
 
-Установка и управление: https://github.com/koariy/valorant-horizon/blob/c286dd72cf3f46da28bd8ec2513af645b096c2b2/README.md
+.hnmod содержит Rust-код: совместимый launcher пересобирает Horizon под систему пользователя. Это не готовый JAR/DLL и не ресурсный .hmod. Совместимость: Horizon client0.1.0/Minecraft26.3 commit41f822b659789780f58d32c63ddfb6887ea1b8bf; mixins0.6.0 commit5a64af938ec86b00d53d16a408aabc0038fb3e57. Проверена Linux x86_64 сборка без default features. Совместимая сборка нужна у сервера и участников.
+
+Установка: https://github.com/koariy/valorant-horizon/blob/da3836f128ed6bbc44a58b2c3e7d2d6d4946756e/README.md
